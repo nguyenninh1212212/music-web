@@ -43,10 +43,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
-
-      if (storedUser && token) {
-        setUser(JSON.parse(storedUser));
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+      console.log("🚀 ~ AuthProvider ~ parsedUser:", parsedUser);
+      if (parsedUser && parsedUser.user && parsedUser.user?.token) {
+        setUser(parsedUser);
       } else {
         setUser(null);
       }
@@ -64,7 +64,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return res.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data));
 
       setUser(data);
@@ -85,7 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     setUser(null);
     window.location.href = "/login";
   };
@@ -100,7 +98,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
   const isArtist = !!user?.user.artistId;
-
   return (
     <AuthContext.Provider
       value={{

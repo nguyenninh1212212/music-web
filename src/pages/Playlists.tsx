@@ -1,5 +1,4 @@
 import React from "react";
-import { mockPlaylists } from "../lib/mockData";
 import { PlaylistCard } from "../components/PlaylistCard";
 import { useQuery } from "@tanstack/react-query";
 import playlistApi from "@/api/playlistApi";
@@ -10,9 +9,9 @@ export const Playlists: React.FC = () => {
     queryFn: () => {
       return playlistApi.getUserPlaylists();
     },
+    gcTime: 4,
   });
-  if (isLoading) console.log("🚀 ~ Playlists ~ isLoading:", isLoading);
-  console.log("🚀 ~ Playlists ~ data:", data);
+  if (isLoading) return;
 
   return (
     <div className="p-8 pb-32">
@@ -22,7 +21,7 @@ export const Playlists: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {mockPlaylists.map((playlist) => (
+        {data?.map((playlist) => (
           <PlaylistCard key={playlist.id} playlist={playlist} />
         ))}
       </div>

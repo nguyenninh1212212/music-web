@@ -53,12 +53,12 @@ export interface ILoginForm {
   password: string;
 }
 export interface IUserForm {
-  token: string;
   user: {
     name?: string;
     artistId: string;
+    token: string;
+    walletAddress?: string;
   };
-  walletAddress?: string;
 }
 
 // =======================================================================
