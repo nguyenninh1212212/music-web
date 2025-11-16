@@ -8,8 +8,12 @@ const songApi = {
   // SỬA ĐỔI: Thêm .data để hàm này trả về đúng dữ liệu bài hát
   getSongById: async (id?: string) => (await api.get(`/songs/${id}`)).data,
 
-  createSong: async (formData: ICreateSong) =>
-    await api.post("/songs", formData),
+  createSong: async (formData: FormData) =>
+    await api.post("/songs", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }),
 
   updateSong: async (id: string, formData: ICreateSong) =>
     await api.patch(`/songs/${id}`, formData),
@@ -28,7 +32,7 @@ const songApi = {
     await api.get("/songs/favorite", { params }),
 
   removeSongFromFavorites: async (songId: string) =>
-    await api.delete("/songs/favorite", { data: { songId } }),
+    await api.delete("/songs/favorite", { params: { songId } }),
 };
 
 export default songApi;

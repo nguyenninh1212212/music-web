@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
+axios.defaults.headers.common["ngrok-skip-browser-warning"] = "true";
 const axiosClient = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -9,10 +10,8 @@ const axiosClient = axios.create({
   withCredentials: true,
 });
 
-// Interceptor cho Request
 axiosClient.interceptors.request.use(
   (config) => {
-    // Hàm nội tuyến đơn giản để lấy token
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
@@ -28,8 +27,6 @@ axiosClient.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
-// --- LOGIC REFRESH TOKEN ---
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -86,10 +83,9 @@ axiosClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const rs = await axiosClient.get("/refresh");
+        const rs = await axiosClient.get("/user/refresh");
 
         const newAccessToken = rs.data.user.token;
-        console.log("🚀 ~ newAccessToken:", newAccessToken);
 
         localStorage.setItem("user", JSON.stringify(rs.data));
         axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;

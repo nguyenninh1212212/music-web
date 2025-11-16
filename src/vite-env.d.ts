@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
+  readonly VITE_PINTA_JWT: string;
+  readonly VITE_CONTRACT_ADDRESS: string;
 }
 
 interface ImportMeta {

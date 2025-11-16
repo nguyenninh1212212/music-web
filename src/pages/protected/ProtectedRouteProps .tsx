@@ -11,7 +11,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  console.log("🚀 ~ ProtectedRoute ~ isAuthenticated:", isAuthenticated);
 
   return isAuthenticated ? <>{children}</> : <Unauthorized />;
 };

@@ -56,5 +56,10 @@ export default defineConfig({
   server: {
     port: 3001,
     open: true,
+    allowedHosts: [
+      "music.loca.lt",
+      "unimpeached-johnie-undauntedly.ngrok-free.dev",
+      "gripless-concordantly-chere.ngrok-free.dev",
+    ],
   },
 });

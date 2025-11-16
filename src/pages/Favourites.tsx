@@ -3,29 +3,29 @@
 import React from "react";
 // import { mockSongs } from "../lib/mockData"; // <-- Bỏ mock data
 import { SongCard } from "../components/SongCard";
-import { Heart, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import songApi from "@/api/songs";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
-import { Song } from "@/lib/types"; // <-- Import kiểu 'Song' của bạn
+import { ISongCard } from "@/lib/types"; // <-- Import kiểu 'Song' của bạn
 
 export const Favourites: React.FC = () => {
   const { isAuthenticated } = useAuth();
   console.log("🚀 ~ Favourites ~ isAuthenticated:", isAuthenticated);
 
-  const { data: favouriteSongs, isLoading } = useQuery<Song[]>({
-    queryKey: ["favorite", isAuthenticated],
+  const { data: favouriteSongs, isLoading } = useQuery({
+    queryKey: ["songs", isAuthenticated],
     queryFn: async () => {
       const response = await songApi.getFavoriteSongs();
       return response.data;
     },
     enabled: isAuthenticated,
+    gcTime: 0, 
   });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <p></p>;
 
-  const songs = favouriteSongs || [];
+  const songs = favouriteSongs.items || [];
+  console.log("🚀 ~ Favourites ~ songs:", songs);
 
   return (
     <div className="pb-32">
@@ -51,17 +51,9 @@ export const Favourites: React.FC = () => {
             </div>
             <div className="space-y-1">
               {/* Map trên mảng thật */}
-              {songs.map((song, index) => (
+              {songs.map((song: ISongCard, index: number) => (
                 <div key={song.id} className="group relative">
                   <SongCard song={song} index={index} />
-                  <button
-                    className="absolute right-16 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
-                    onClick={() => {
-                      // TODO: Xử lý remove song
-                    }}
-                  >
-                    <Heart className="w-5 h-5" fill="currentColor" />
-                  </button>
                 </div>
               ))}
             </div>

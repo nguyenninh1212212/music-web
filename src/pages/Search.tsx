@@ -14,66 +14,53 @@ import {
 } from "../components/ui/tabs";
 import { SongCard } from "../components/SongCard";
 import { ArtistCard } from "../components/ArtistCard";
-import { AlbumCard } from "../components/AlbumCard";
-import { PlaylistCard } from "../components/PlaylistCard";
-import {
-  mockSongs,
-  mockArtists,
-  mockAlbums,
-  mockPlaylists,
-} from "../lib/mockData";
+import { useQuery } from "@tanstack/react-query";
+import searchApi from "@/api/search";
 
 export const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter results based on search query
-  const filteredResults = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+  // --- Fetch dữ liệu ---
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["search", searchQuery],
+    queryFn: () => searchApi.getSearch(searchQuery),
+    enabled: !!searchQuery.trim(), // chỉ fetch khi có input
+  });
+  console.log("🚀 ~ Search ~ data:", data);
 
-    if (!query) {
+  // --- Dữ liệu hiển thị ---
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim()) {
       return {
         songs: [],
         artists: [],
-        albums: [],
-        playlists: [],
       };
     }
 
     return {
-      songs: mockSongs.filter(
-        (song) =>
-          song.title.toLowerCase().includes(query) ||
-          song.artist.toLowerCase().includes(query) ||
-          song.album.toLowerCase().includes(query)
-      ),
-      artists: mockArtists.filter((artist) =>
-        artist.name.toLowerCase().includes(query)
-      ),
-      albums: mockAlbums.filter(
-        (album) =>
-          album.title.toLowerCase().includes(query) ||
-          album.artist.toLowerCase().includes(query)
-      ),
-      playlists: mockPlaylists.filter((playlist) =>
-        playlist.title.toLowerCase().includes(query)
-      ),
+      songs: data?.songs || [],
+      artists: data?.artists || [],
     };
-  }, [searchQuery]);
+  }, [data, searchQuery]);
 
+  // --- Tổng kết quả ---
   const totalResults =
-    filteredResults.songs.length +
-    filteredResults.artists.length +
-    filteredResults.albums.length +
-    filteredResults.playlists.length;
+    filteredResults.songs.length + filteredResults.artists.length;
+
+  // --- Trạng thái ---
+  if (error)
+    return (
+      <div className="text-red-400 text-center mt-8">
+        Lỗi: {(error as Error).message}
+      </div>
+    );
 
   return (
     <div className="min-h-screen pb-32 px-8 py-8">
-      {/* Header Section */}
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-white mb-2">Tìm kiếm</h1>
-        <p className="text-gray-400">
-          Tìm bài hát yêu thich, nghệ sĩ, albums, và playlists
-        </p>
+        <p className="text-gray-400">Tìm bài hát yêu thích, nghệ sĩ</p>
       </div>
 
       {/* Search Bar */}
@@ -82,7 +69,7 @@ export const Search: React.FC = () => {
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Tìm kiếm bài hát, nghệ sĩ, album hoặc danh sách phát...s, artists, albums, or playlists..."
+            placeholder="Tìm kiếm bài hát, nghệ sĩ...."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-gray-900/50 border border-gray-800 rounded-xl pl-12 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#00FF80] focus:shadow-[0_0_20px_rgba(0,255,128,0.2)] transition-all duration-200"
@@ -90,136 +77,94 @@ export const Search: React.FC = () => {
         </div>
       </div>
 
-      {/* Results Section */}
-      {!searchQuery ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-20 h-20 rounded-full bg-gray-900/50 border border-gray-800 flex items-center justify-center mb-4">
-            <SearchIcon className="w-10 h-10 text-gray-600" />
-          </div>
-          <h2 className="text-white mb-2">Bắt đầu tìm</h2>
-          <p className="text-gray-400 text-center max-w-md">
-            Nhập tên bài hát, nghệ sĩ, album hoặc danh sách phát để tìm những gì
-            bạn đang tìm kiếm
-          </p>
-        </div>
+      {/* Result */}
+      {!searchQuery || isLoading ? (
+        <EmptySearchState />
       ) : totalResults === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-20 h-20 rounded-full bg-gray-900/50 border border-gray-800 flex items-center justify-center mb-4">
-            <SearchIcon className="w-10 h-10 text-gray-600" />
-          </div>
-          <h2 className="text-white mb-2">Không tìm thấy kết quả</h2>
-          <p className="text-gray-400 text-center max-w-md">
-            Hãy thử tìm kiếm bằng các từ khóa khác nhau hoặc kiểm tra chính tả
-            của bạn
-          </p>
-        </div>
+        <EmptyResultState />
       ) : (
-        <div>
-          <div className="mb-6">
-            <p className="text-gray-400">
-              Tìm thấy {totalResults} kết quả{totalResults !== 1 ? "s" : ""} for
-              "{searchQuery}"
-            </p>
-          </div>
-
-          <Tabs defaultValue="songs" className="w-full">
-            <TabsList className="bg-gray-900/50 border border-gray-800 p-1 mb-8">
-              <TabsTrigger
-                value="songs"
-                className="data-[state=active]:bg-[#00FF80]/10 data-[state=active]:text-[#00FF80] data-[state=active]:shadow-[0_0_15px_rgba(0,255,128,0.3)]"
-              >
-                <Music className="w-4 h-4 mr-2" />
-                Songs ({filteredResults.songs.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="artists"
-                className="data-[state=active]:bg-[#00FF80]/10 data-[state=active]:text-[#00FF80] data-[state=active]:shadow-[0_0_15px_rgba(0,255,128,0.3)]"
-              >
-                <Mic2 className="w-4 h-4 mr-2" />
-                Artists ({filteredResults.artists.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="albums"
-                className="data-[state=active]:bg-[#00FF80]/10 data-[state=active]:text-[#00FF80] data-[state=active]:shadow-[0_0_15px_rgba(0,255,128,0.3)]"
-              >
-                <Disc className="w-4 h-4 mr-2" />
-                Albums ({filteredResults.albums.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="playlists"
-                className="data-[state=active]:bg-[#00FF80]/10 data-[state=active]:text-[#00FF80] data-[state=active]:shadow-[0_0_15px_rgba(0,255,128,0.3)]"
-              >
-                <ListMusic className="w-4 h-4 mr-2" />
-                Playlists ({filteredResults.playlists.length})
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Songs Tab */}
-            <TabsContent value="songs" className="mt-0">
-              {filteredResults.songs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Music className="w-12 h-12 text-gray-600 mb-3" />
-                  <p className="text-gray-400">Không thấy bài hát</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {filteredResults.songs.map((song) => (
-                    <SongCard key={song.id} song={song} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Artists Tab */}
-            <TabsContent value="artists" className="mt-0">
-              {filteredResults.artists.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Mic2 className="w-12 h-12 text-gray-600 mb-3" />
-                  <p className="text-gray-400">Không thấy nghệ sĩ</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredResults.artists.map((artist) => (
-                    <ArtistCard key={artist.id} artist={artist} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Albums Tab */}
-            <TabsContent value="albums" className="mt-0">
-              {filteredResults.albums.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Disc className="w-12 h-12 text-gray-600 mb-3" />
-                  <p className="text-gray-400">Không thấy album</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredResults.albums.map((album) => (
-                    <AlbumCard key={album.id} album={album} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Playlists Tab */}
-            <TabsContent value="playlists" className="mt-0">
-              {filteredResults.playlists.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <ListMusic className="w-12 h-12 text-gray-600 mb-3" />
-                  <p className="text-gray-400">Không thấy playlist</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredResults.playlists.map((playlist) => (
-                    <PlaylistCard key={playlist.id} playlist={playlist} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <SearchTabs
+          results={filteredResults}
+          total={totalResults}
+          query={searchQuery}
+        />
       )}
     </div>
   );
 };
+
+// --- Component phụ ---
+const EmptySearchState = () => (
+  <div className="flex flex-col items-center justify-center py-20">
+    <div className="w-20 h-20 rounded-full bg-gray-900/50 border border-gray-800 flex items-center justify-center mb-4">
+      <SearchIcon className="w-10 h-10 text-gray-600" />
+    </div>
+    <h2 className="text-white mb-2">Bắt đầu tìm</h2>
+    <p className="text-gray-400 text-center max-w-md">
+      Nhập tên bài hát, nghệ sĩ
+    </p>
+  </div>
+);
+
+const EmptyResultState = () => (
+  <div className="flex flex-col items-center justify-center py-20">
+    <div className="w-20 h-20 rounded-full bg-gray-900/50 border border-gray-800 flex items-center justify-center mb-4">
+      <SearchIcon className="w-10 h-10 text-gray-600" />
+    </div>
+    <h2 className="text-white mb-2">Không tìm thấy kết quả</h2>
+    <p className="text-gray-400 text-center max-w-md">
+      Thử lại với từ khóa khác hoặc kiểm tra chính tả.
+    </p>
+  </div>
+);
+
+const SearchTabs = ({ results, total, query }) => (
+  <div>
+    <div className="mb-6">
+      <p className="text-gray-400">
+        Tìm thấy {total} kết quả cho "
+        <span className="text-white">{query}</span>"
+      </p>
+    </div>
+
+    <Tabs defaultValue="songs" className="w-full">
+      <TabsList className="bg-gray-900/50 border border-gray-800 p-1 mb-8">
+        <TabsTrigger value="songs">
+          <Music className="w-4 h-4 mr-2" /> Songs ({results.songs.length})
+        </TabsTrigger>
+        <TabsTrigger value="artists">
+          <Mic2 className="w-4 h-4 mr-2" /> Artists ({results.artists.length})
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Songs */}
+      <TabsContent value="songs">
+        {results.songs.length === 0 ? (
+          <EmptyTab icon={Music} text="Không thấy bài hát" />
+        ) : (
+          results.songs.map((song) => <SongCard key={song.id} song={song} />)
+        )}
+      </TabsContent>
+
+      {/* Artists */}
+      <TabsContent value="artists">
+        {results.artists.length === 0 ? (
+          <EmptyTab icon={Mic2} text="Không thấy nghệ sĩ" />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {results.artists.map((artist) => (
+              <ArtistCard key={artist.id} artist={artist} />
+            ))}
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
+  </div>
+);
+
+const EmptyTab = ({ icon: Icon, text }) => (
+  <div className="flex flex-col items-center justify-center py-12">
+    <Icon className="w-12 h-12 text-gray-600 mb-3" />
+    <p className="text-gray-400">{text}</p>
+  </div>
+);

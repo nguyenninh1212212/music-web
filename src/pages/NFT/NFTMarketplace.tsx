@@ -10,6 +10,11 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Search, Filter } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getTickets } from "@/api/nft";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AppCrash } from "../error/AppCrash";
+import { IEventTicket } from "@/lib/types";
 
 export const NFTMarketplace = () => {
   const { tickets } = useData();
@@ -17,41 +22,21 @@ export const NFTMarketplace = () => {
   const [genreFilter, setGenreFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
 
-  const genres = ["all", ...Array.from(new Set(tickets.map((t) => t.genre)))];
-
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch =
-      ticket.eventTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.artistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.venue.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesGenre = genreFilter === "all" || ticket.genre === genreFilter;
-
-    const matchesPrice =
-      priceFilter === "all" ||
-      (priceFilter === "low" && ticket.priceETH < 0.3) ||
-      (priceFilter === "medium" &&
-        ticket.priceETH >= 0.3 &&
-        ticket.priceETH < 0.5) ||
-      (priceFilter === "high" && ticket.priceETH >= 0.5);
-
-    return matchesSearch && matchesGenre && matchesPrice;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["nft"],
+    queryFn: async () => {
+      return getTickets();
+    },
   });
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <AppCrash />;
+  console.log("🚀 ~ NFTMarketplace ~ data:", data);
+
+  const genres = ["all", ...Array.from(new Set(tickets.map((t) => t.genre)))];
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-[3rem] text-white mb-3 bg-gradient-to-r from-[#00FF80] to-white bg-clip-text text-transparent">
-            🎟️ NFT Ticket Marketplace
-          </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Discover exclusive events and secure your spot with
-            blockchain-verified tickets
-          </p>
-        </div>
-
         {/* Filters */}
         <div className="mb-8 p-6 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
           <div className="flex items-center gap-2 mb-4">
@@ -125,10 +110,10 @@ export const NFTMarketplace = () => {
         </div>
 
         {/* Tickets Grid */}
-        {filteredTickets.length > 0 ? (
+        {data.tickets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} />
+            {data.tickets.map((ticket: IEventTicket) => (
+              <TicketCard key={ticket.eventId} ticket={ticket} />
             ))}
           </div>
         ) : (

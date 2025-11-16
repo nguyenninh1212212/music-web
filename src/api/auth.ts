@@ -32,6 +32,9 @@ const userApi = {
   googleLogin: (credential: string) => {
     return axiosClient.post(`${BASE_PATH}/google`, { credential });
   },
+  addWallet: (walletAddress: string) => {
+    return axiosClient.post(`${BASE_PATH}/add-wallet`, { walletAddress });
+  },
 };
 
 export default userApi;

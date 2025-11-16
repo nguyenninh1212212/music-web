@@ -65,35 +65,30 @@ export interface IUserForm {
 // === 3. SONG MODELS
 // =======================================================================
 
-export interface Song {
+export interface SongSummary {
   id: string;
   title: string;
+  coverImage: string;
+  duration: number;
+}
+
+export interface Song extends SongSummary {
   artist: string; // Đây có thể là artistId
   albumId: string;
-  duration: number;
-  coverImage: string;
   song: string; // URL hoặc ID của file âm thanh
   isFavourite?: boolean;
 }
 
-export interface ISongCard {
-  id: string;
-  title: string;
-  duration: number;
-  coverImage: string;
+export interface ISongCard extends SongSummary {
   song: string;
   artist: {
     stageName: string;
     id: string;
   };
   albumId: string;
-  ads: string;
+  isFavourite: boolean;
 }
-export interface ISongBar {
-  id: string;
-  title: string;
-  duration: number;
-  coverImage: string;
+export interface ISongBar extends SongSummary {
   stageName: string;
   song: string;
   artistId: string;
@@ -214,6 +209,7 @@ export interface IArtistCreate {
  */
 export interface IArtistCard extends IArtistSummary {
   followerCount: number;
+  name?: string;
 }
 
 /**
@@ -249,13 +245,13 @@ export interface IFollower {
  */
 export interface Playlist {
   id: string;
-  title: string;
-  coverImage: string;
+  name: string;
   songCount: number;
-  songs: Song[];
+  songs: {
+    id: string;
+    coverImage: string;
+  }[];
   description?: string;
-  createdAt?: string; // Thêm từ định nghĩa thứ 2
-  updatedAt?: string; // Thêm từ định nghĩa thứ 2
 }
 
 // =======================================================================
@@ -270,10 +266,38 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
-  duration: number; // Số ngày (từ 'Plan')
-  type: "monthly" | "yearly" | "one-time" | "ARTIST"; // (từ 'Plan' và service)
-  features: string[];
-  recommended?: boolean;
+  duration: number;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  subscription: UserSubscription | null;
+}
+
+export interface UserSubscription {
+  id: string;
+  planId: string;
+  status: "ACTIVE" | "INACTIVE" | "EXPIRED";
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface IOrderDetails {
+  id: string;
+  amount: number;
+  method: "paypal" | "credit_card" | "bank_transfer";
+  status: string;
+  transactionId: string;
+  paymentType: "SUBSCRIPTION" | "ALBUM" | "RENEWSUBSCRIPTION";
+  createdAt: string;
+  currencyCode: string;
+  orderId: string;
+  item?: {
+    id: string;
+    name: string;
+    price: number;
+    duration: number;
+    type: string;
+  };
 }
 
 /**
@@ -306,4 +330,39 @@ export interface Payment {
   paymentMethod: string;
   transactionId: string;
   createdAt: string;
+}
+
+export interface IEventTicket {
+  artistId: string;
+  contractAddress: string;
+  eventId: string;
+  mintedCount: number;
+  status: string;
+  stageName: string;
+  baseUri: string;
+  title: string;
+  location: string;
+  date: string;
+  price: string;
+  maxSupply: number;
+  coverImage: string;
+  createdAt: string;
+}
+export interface IMyTicket {
+  event: IEventTicket;
+  isResell: boolean;
+  resellPrice: string;
+  stageName?: string;
+  tokenId: string;
+  userTicketId: string;
+}
+
+export interface ICreateTicket {
+  coverFile: File | null;
+  title: string;
+  date: string; // Sẽ lưu ở định dạng "YYYY-MM-DDTHH:mm"
+  location: string;
+  price: string;
+  maxSupply: string;
+  saleDeadline: string; // Sẽ lưu ở định dạng "YYYY-MM-DDTHH:mm"
 }

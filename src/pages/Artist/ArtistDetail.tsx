@@ -84,7 +84,7 @@ export const ArtistDetail: React.FC = () => {
           />
           <h1 className="text-white mb-1 text-center">{artist.stageName}</h1>
           <p className="text-gray-300 mb-4 text-center">
-            {formatFollowers(artist.followerCount)} followers
+            {formatFollowers(artist?.followerCount || 0)} followers
           </p>
         </div>
       </div>
@@ -182,7 +182,9 @@ export const ArtistDetail: React.FC = () => {
                           className="text-3xl text-white"
                           style={{ fontWeight: "bold" }}
                         >
-                          {formatNumber(mountlyView?.view)}
+                          {mountlyView?.view
+                            ? formatNumber(mountlyView?.view)
+                            : 0}
                         </p>
                       </div>
                       <div className="bg-blue-500/20 p-4 rounded-full">

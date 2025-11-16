@@ -1,5 +1,4 @@
 import React from "react";
-import { mockSongs } from "../lib/mockData";
 import { ArtistCard } from "../components/ArtistCard";
 import { AudioWaveform } from "lucide-react";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
@@ -11,12 +10,6 @@ import { AlbumCard } from "@/components/AlbumCard";
 import Loading from "@/components/Loading";
 
 export const MainPage: React.FC = () => {
-  const { playSong, setQueue } = useMusicPlayer();
-
-  const handlePlayTrending = () => {
-    setQueue(mockSongs);
-    playSong(mockSongs[0]);
-  };
   const { data, isLoading, error } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -24,9 +17,10 @@ export const MainPage: React.FC = () => {
       return res;
     },
   });
+  console.log("🚀 ~ MainPage ~ data:", data);
   if (isLoading) return <Loading />;
   if (error) return;
-  console.log("🚀 ~ MainPage ~ data:", data);
+  console.log("🚀 ~ MainPage ~ error:", error);
 
   return (
     <div className="p-5 pb-32">
@@ -44,10 +38,7 @@ export const MainPage: React.FC = () => {
             Khám phá những bản nhạc hot nhất hiện nay
           </p>
           <Link to={"/music/trend"}>
-            <button
-              onClick={handlePlayTrending}
-              className="flex items-center gap-2 px-8 py-3 bg-[#00FF80] hover:bg-[#00FF80]/80 text-black rounded-full transition-all duration-300 shadow-[0_0_25px_rgba(0,255,128,0.6)] hover:shadow-[0_0_35px_rgba(0,255,128,0.8)]"
-            >
+            <button className="flex items-center gap-2 px-8 py-3 bg-[#00FF80] hover:bg-[#00FF80]/80 text-black rounded-full transition-all duration-300 shadow-[0_0_25px_rgba(0,255,128,0.6)] hover:shadow-[0_0_35px_rgba(0,255,128,0.8)]">
               <span>Khám phá </span>
               <AudioWaveform className="w-5 h-5 ml-0.5" />
             </button>

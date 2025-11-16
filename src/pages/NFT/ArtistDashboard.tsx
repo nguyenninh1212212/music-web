@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useData } from "../../contexts/DataContext";
 import {
   Tabs,
   TabsContent,
@@ -11,7 +10,6 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -20,34 +18,30 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { Upload, TrendingUp, Ticket, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { ethers } from "ethers";
+import { createTicket } from "@/api/nft";
+import { useMutation } from "@tanstack/react-query";
+import { ICreateTicket } from "@/lib/types";
+import FactoryABI from "../../../../smart-contract-new/artifacts/contracts/TicketFactory.sol/TicketFactory.json";
+import { uploadFileToIPFS, uploadJSONToIPFS } from "@/util/ipfs";
 
 export const ArtistDashboard = () => {
   const navigate = useNavigate();
   const { user, isArtist } = useAuth();
-  const { tickets, createTicket } = useData();
 
-  const [formData, setFormData] = useState({
-    eventTitle: "",
+  const [formData, setFormData] = useState<ICreateTicket>({
+    coverFile: null,
+    title: "",
     date: "",
-    venue: "",
-    genre: "",
-    priceETH: "",
-    totalSupply: "",
-    seatType: "",
-    description: "",
-    image: "",
+    location: "",
+    price: "",
+    maxSupply: "",
+    saleDeadline: "",
   });
+
+  const [isCreating, setIsCreating] = useState(false);
 
   if (!user || !isArtist) {
     return (
@@ -64,80 +58,219 @@ export const ArtistDashboard = () => {
       </div>
     );
   }
+  const mutate = useMutation({
+    mutationFn: ({
+      contractAddress,
+      baseUrl,
+      date,
+      saleDeadline,
+      price,
+      location,
+      title,
+      maxSupply,
+      coverImage,
+    }: {
+      contractAddress: string;
+      baseUrl: string;
+      date: string;
+      saleDeadline: string;
+      price: string;
+      location: string;
+      title: string;
+      maxSupply: number;
+      coverImage: string;
+    }) =>
+      createTicket(
+        contractAddress,
+        baseUrl,
+        saleDeadline,
+        date,
+        price,
+        location,
+        title,
+        maxSupply,
+        coverImage
+      ),
+    onSuccess: () => {
+      toast.success("NFT Ticket created successfully!");
+      setFormData({
+        coverFile: null,
+        title: "",
+        date: "",
+        location: "",
+        maxSupply: "",
+        price: "",
+        saleDeadline: "",
+      });
+      setIsCreating(false);
+    },
+    onError: (error: any) => {
+      toast.error("NFT create offchain failed: " + (error?.message || error));
+      setIsCreating(false);
+    },
+  });
 
-  const artistTickets = tickets.filter(
-    (t) => t.artistId === "artist1" || t.artistName === user.name
-  );
+  const handleCreateTicket = async () => {
+    if (isCreating) return;
 
-  const handleCreateTicket = () => {
-    if (
-      !formData.eventTitle ||
-      !formData.date ||
-      !formData.priceETH ||
-      !formData.totalSupply
-    ) {
-      toast.error("Please fill in all required fields");
-      return;
+    try {
+      // 1. Validation
+      if (
+        !formData.title ||
+        !formData.date ||
+        !formData.price ||
+        !formData.maxSupply ||
+        !formData.coverFile
+      ) {
+        return toast.error("Please fill in all required fields");
+      }
+
+      if (!window.ethereum) {
+        return toast.error("Install MetaMask!");
+      }
+
+      setIsCreating(true);
+      toast.info("Starting ticket creation process...");
+
+      // 2. Upload image to IPFS
+      toast.info("Uploading image to IPFS...");
+      const imageResult = await uploadFileToIPFS(formData.coverFile);
+
+      // 3. Create and upload metadata to IPFS
+      toast.info("Uploading metadata to IPFS...");
+      const metadata = {
+        name: formData.title,
+        description: `Ticket for ${formData.title}${
+          formData.location ? ` at ${formData.location}` : ""
+        }`,
+        attributes: [
+          { trait_type: "Event", value: formData.title },
+          { trait_type: "Location", value: formData.location || "TBA" },
+          { trait_type: "Date", value: formData.date },
+          { trait_type: "Price", value: `${formData.price} ETH` },
+        ],
+      };
+
+      const metadataCID = await uploadJSONToIPFS(metadata);
+      const _baseURI = `ipfs://${metadataCID}/`;
+      const factoryAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+
+      // 4. Connect to blockchain
+      toast.info("Connecting to blockchain...");
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+      const abi = FactoryABI.abi;
+
+      const factoryContract = new ethers.Contract(factoryAddress, abi, signer);
+
+      const code = await provider.getCode(factoryAddress);
+      console.log(code.length > 2 ? "Contract exists" : "Not deployed");
+
+      const network = await provider.getNetwork();
+      if (network.chainId !== 31337n) {
+        return toast.error("Please switch MetaMask to Hardhat (chainId 31337)");
+      }
+      console.log(
+        "🚀 ~ handleCreateTicket ~ factoryContract:",
+        factoryContract
+      );
+
+      const _price = ethers.parseUnits(formData.price, "ether");
+      const _maxSupply = parseInt(formData.maxSupply);
+
+      // Validate and set sale deadline
+      let _saleDeadline: number;
+      if (formData.saleDeadline) {
+        _saleDeadline = Math.floor(
+          new Date(formData.saleDeadline).getTime() / 1000
+        );
+        const now = Math.floor(Date.now() / 1000);
+
+        if (_saleDeadline <= now) {
+          setIsCreating(false);
+          return toast.error("Sale deadline must be in the future!");
+        }
+      } else {
+        _saleDeadline = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+      }
+
+      // 6. Create ticket contract on blockchain
+      toast.info("Creating ticket contract on blockchain...");
+      const fn = factoryContract.getFunction("createTicketContract");
+      const tx = await factoryContract[fn.name](
+        _price,
+        _maxSupply,
+        _saleDeadline,
+        _baseURI
+      );
+
+      toast.info("Waiting for transaction confirmation...");
+      const receipt = await tx.wait(1);
+
+      const iface = factoryContract.interface;
+      let ticketAddress: string | null = null;
+
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log);
+
+          console.log("Parsed:", parsed);
+
+          if (parsed?.name === "TicketContractCreated") {
+            ticketAddress = parsed.args.ticketContract; // ethers v6
+            break;
+          }
+        } catch {}
+      }
+
+      // Fallback method if event parsing fails
+      if (!ticketAddress) {
+        console.log("⚠️ Event not found, trying fallback method...");
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        ticketAddress = await factoryContract.getLastTicket();
+
+        if (
+          !ticketAddress ||
+          ticketAddress === "0x0000000000000000000000000000000000000000"
+        ) {
+          throw new Error("Failed to get ticket contract address!");
+        }
+      }
+      console.log("🚀 ~ handleCreateTicket ~ ticketAddress:", ticketAddress);
+
+      toast.success("Ticket contract created on blockchain!");
+
+      toast.info("Saving ticket to database...");
+      setIsCreating(false);
+      console.log("🚀 ~ handleCreateTicket ~ formData.date:", formData.date);
+
+      mutate.mutate({
+        contractAddress: ticketAddress,
+        baseUrl: _baseURI,
+        date: formData.date,
+        location: formData.location,
+        price: formData.price,
+        saleDeadline: _saleDeadline.toString(),
+        title: formData.title,
+        maxSupply: _maxSupply,
+        coverImage: imageResult.ipfsUrl,
+      });
+    } catch (error: any) {
+      console.error("❌ Error creating ticket:", error);
+      toast.error(
+        "Failed to create ticket: " + (error.message || String(error))
+      );
+      setIsCreating(false);
     }
-
-    createTicket({
-      eventTitle: formData.eventTitle,
-      artistName: user.name,
-      artistId: user.id,
-      date: formData.date,
-      venue: formData.venue,
-      genre: formData.genre,
-      priceETH: parseFloat(formData.priceETH),
-      priceUSD: parseFloat(formData.priceETH) * 2400,
-      totalSupply: parseInt(formData.totalSupply),
-      remainingSupply: parseInt(formData.totalSupply),
-      image: formData.image || "concert music",
-      seatType: formData.seatType,
-      contractAddress: `0x${Math.random()
-        .toString(16)
-        .slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`,
-      description: formData.description,
-    });
-
-    toast.success("NFT Ticket created successfully!");
-
-    setFormData({
-      eventTitle: "",
-      date: "",
-      venue: "",
-      genre: "",
-      priceETH: "",
-      totalSupply: "",
-      seatType: "",
-      description: "",
-      image: "",
-    });
   };
-
-  const totalSold = artistTickets.reduce(
-    (sum, t) => sum + (t.totalSupply - t.remainingSupply),
-    0
-  );
-  const totalEarnings = artistTickets.reduce(
-    (sum, t) => sum + (t.totalSupply - t.remainingSupply) * t.priceETH,
-    0
-  );
-
-  const salesData = [
-    { month: "Jan", sales: 12 },
-    { month: "Feb", sales: 19 },
-    { month: "Mar", sales: 15 },
-    { month: "Apr", sales: 28 },
-    { month: "May", sales: 35 },
-    { month: "Jun", sales: 42 },
-  ];
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-white mb-2">🎤 Artist NFT Dashboard</h1>
-          <p className="text-gray-400">Welcome back, {user.name}</p>
+          <p className="text-gray-400">Welcome back, {user?.user.name}</p>
         </div>
 
         {/* Stats Overview */}
@@ -147,7 +280,7 @@ export const ArtistDashboard = () => {
               <Ticket className="text-[#00FF80]" size={24} />
               <h3 className="text-white">Total Events</h3>
             </div>
-            <p className="text-white text-[2rem]">{artistTickets.length}</p>
+            <p className="text-white text-[2rem]">0</p>
           </div>
 
           <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30">
@@ -155,7 +288,7 @@ export const ArtistDashboard = () => {
               <TrendingUp className="text-blue-400" size={24} />
               <h3 className="text-white">Tickets Sold</h3>
             </div>
-            <p className="text-white text-[2rem]">{totalSold}</p>
+            <p className="text-white text-[2rem]">0</p>
           </div>
 
           <div className="p-6 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30">
@@ -163,12 +296,7 @@ export const ArtistDashboard = () => {
               <DollarSign className="text-yellow-400" size={24} />
               <h3 className="text-white">Total Earnings</h3>
             </div>
-            <p className="text-white text-[2rem]">
-              {totalEarnings.toFixed(2)} ETH
-            </p>
-            <p className="text-gray-400 text-[0.875rem]">
-              ${(totalEarnings * 2400).toFixed(2)}
-            </p>
+            <p className="text-white text-[2rem]">0 ETH</p>
           </div>
         </div>
 
@@ -185,12 +313,6 @@ export const ArtistDashboard = () => {
               className="data-[state=active]:bg-[#00FF80] data-[state=active]:text-black"
             >
               Create New Ticket
-            </TabsTrigger>
-            <TabsTrigger
-              value="sales"
-              className="data-[state=active]:bg-[#00FF80] data-[state=active]:text-black"
-            >
-              Sales Overview
             </TabsTrigger>
           </TabsList>
 
@@ -209,33 +331,14 @@ export const ArtistDashboard = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {artistTickets.map((ticket) => {
-                    const sold = ticket.totalSupply - ticket.remainingSupply;
-                    const earnings = sold * ticket.priceETH;
-                    return (
-                      <TableRow
-                        key={ticket.id}
-                        className="border-[#00FF80]/10 hover:bg-white/5"
-                      >
-                        <TableCell className="text-white">
-                          {ticket.eventTitle}
-                        </TableCell>
-                        <TableCell className="text-gray-400">
-                          {new Date(ticket.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-white">
-                          {ticket.priceETH} ETH
-                        </TableCell>
-                        <TableCell className="text-[#00FF80]">{sold}</TableCell>
-                        <TableCell className="text-gray-400">
-                          {ticket.remainingSupply}
-                        </TableCell>
-                        <TableCell className="text-white">
-                          {earnings.toFixed(2)} ETH
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-gray-400 py-8"
+                    >
+                      No events yet. Create your first ticket!
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>
@@ -244,69 +347,105 @@ export const ArtistDashboard = () => {
           {/* Create New Ticket */}
           <TabsContent value="create" className="space-y-4">
             <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-              <h3 className="text-white mb-6">Mint New NFT Ticket</h3>
+              <h3 className="text-white text-xl mb-6">Mint New NFT Ticket</h3>
+
+              {/* Cover Image */}
+              <div className="mb-6">
+                <Label htmlFor="coverFile" className="text-gray-300">
+                  Cover Image *
+                </Label>
+                <div className="mt-2 flex flex-col gap-3">
+                  {formData.coverFile && (
+                    <img
+                      src={URL.createObjectURL(formData.coverFile)}
+                      alt="Preview"
+                      className="w-full max-w-md h-64 object-cover rounded-xl border border-[#00FF80]/30 shadow-lg"
+                    />
+                  )}
+                  <Input
+                    id="coverFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      setFormData({ ...formData, coverFile: file || null });
+                    }}
+                    className="bg-white/5 border-[#00FF80]/30 text-white cursor-pointer"
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Event Name */}
                 <div>
                   <Label htmlFor="eventTitle" className="text-gray-300">
                     Event Name *
                   </Label>
                   <Input
                     id="eventTitle"
-                    value={formData.eventTitle}
+                    value={formData.title}
                     onChange={(e) =>
-                      setFormData({ ...formData, eventTitle: e.target.value })
+                      setFormData({ ...formData, title: e.target.value })
                     }
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
                     placeholder="Neon Dreams Festival 2025"
                   />
                 </div>
 
+                {/* Event Date */}
                 <div>
-                  <Label htmlFor="date" className="text-gray-300">
+                  <Label htmlFor="eventDate" className="text-gray-300">
                     Event Date *
                   </Label>
                   <Input
-                    id="date"
-                    type="date"
+                    id="eventDate"
+                    type="datetime-local"
                     value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) => {
+                      setFormData({ ...formData, date: e.target.value });
+                    }}
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
                   />
                 </div>
 
+                {/* Location */}
                 <div>
-                  <Label htmlFor="venue" className="text-gray-300">
-                    Venue
+                  <Label htmlFor="location" className="text-gray-300">
+                    Location
                   </Label>
                   <Input
-                    id="venue"
-                    value={formData.venue}
+                    id="location"
+                    value={formData.location}
                     onChange={(e) =>
-                      setFormData({ ...formData, venue: e.target.value })
+                      setFormData({ ...formData, location: e.target.value })
                     }
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
                     placeholder="Crypto Arena, Los Angeles"
                   />
                 </div>
 
+                {/* Sale Deadline */}
                 <div>
-                  <Label htmlFor="genre" className="text-gray-300">
-                    Genre
+                  <Label htmlFor="saleDeadline" className="text-gray-300">
+                    Sale Deadline (Optional - Default: 7 days)
                   </Label>
                   <Input
-                    id="genre"
-                    value={formData.genre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, genre: e.target.value })
-                    }
+                    id="saleDeadline"
+                    type="datetime-local"
+                    value={formData.saleDeadline}
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        saleDeadline: e.target.value,
+                      });
+                    }}
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="Electronic, Rock, Jazz..."
                   />
                 </div>
 
+                {/* Price */}
                 <div>
                   <Label htmlFor="priceETH" className="text-gray-300">
                     Price (ETH) *
@@ -315,119 +454,43 @@ export const ArtistDashboard = () => {
                     id="priceETH"
                     type="number"
                     step="0.01"
-                    value={formData.priceETH}
+                    min="0"
+                    value={formData.price}
                     onChange={(e) =>
-                      setFormData({ ...formData, priceETH: e.target.value })
+                      setFormData({ ...formData, price: e.target.value })
                     }
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
                     placeholder="0.5"
                   />
                 </div>
 
+                {/* Max Supply */}
                 <div>
-                  <Label htmlFor="totalSupply" className="text-gray-300">
-                    Total Supply *
+                  <Label htmlFor="maxSupply" className="text-gray-300">
+                    Max Supply *
                   </Label>
                   <Input
-                    id="totalSupply"
+                    id="maxSupply"
                     type="number"
-                    value={formData.totalSupply}
+                    min="1"
+                    value={formData.maxSupply}
                     onChange={(e) =>
-                      setFormData({ ...formData, totalSupply: e.target.value })
+                      setFormData({ ...formData, maxSupply: e.target.value })
                     }
                     className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="500"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="seatType" className="text-gray-300">
-                    Seat Type
-                  </Label>
-                  <Input
-                    id="seatType"
-                    value={formData.seatType}
-                    onChange={(e) =>
-                      setFormData({ ...formData, seatType: e.target.value })
-                    }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="General Admission, VIP, Floor..."
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="image" className="text-gray-300">
-                    Image Keywords
-                  </Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
-                    }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="concert electronic"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="description" className="text-gray-300">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="Tell attendees about this amazing event..."
-                    rows={4}
+                    placeholder="50"
                   />
                 </div>
               </div>
 
               <Button
                 onClick={handleCreateTicket}
-                className="mt-6 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)]"
+                disabled={isCreating}
+                className="mt-6 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Upload className="mr-2" size={18} />
-                Mint NFT Ticket
+                {isCreating ? "Creating..." : "Mint NFT Ticket"}
               </Button>
-            </div>
-          </TabsContent>
-
-          {/* Sales Overview */}
-          <TabsContent value="sales" className="space-y-4">
-            <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-              <h3 className="text-white mb-6">Sales History</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={salesData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#00FF80"
-                    opacity={0.1}
-                  />
-                  <XAxis dataKey="month" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0A0A0A",
-                      border: "1px solid #00FF80",
-                      borderRadius: "8px",
-                      color: "#fff",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="sales"
-                    stroke="#00FF80"
-                    strokeWidth={3}
-                    dot={{ fill: "#00FF80", r: 6 }}
-                    activeDot={{ r: 8, stroke: "#00FF80", strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
             </div>
           </TabsContent>
         </Tabs>

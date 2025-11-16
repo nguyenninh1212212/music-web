@@ -17,7 +17,7 @@ const artistApi = {
     return await api.get("/artists/me");
   },
 
-  updateArtistProfile: async (formData: IArtistCreate) =>
+  updateArtistProfile: async (formData: FormData) =>
     await api.put("/artists/me", formData, {
       headers: {
         "Content-Type": "multipart/form-data",

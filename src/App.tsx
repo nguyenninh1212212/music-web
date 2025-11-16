@@ -1,4 +1,5 @@
 import React from "react";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,37 +7,39 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { MusicPlayerProvider } from "./contexts/MusicPlayerContext";
-import { Sidebar } from "./components/Sidebar";
-import { MusicPlayerBar } from "./components/MusicPlayerBar";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import { Home } from "./pages/Home";
-import { Playlists } from "./pages/Playlists";
-import { PlaylistDetail } from "./pages/PlaylistDetail";
-import { Albums } from "./pages/Albums";
-import { AlbumDetail } from "./pages/AlbumDetail";
-import { Artists } from "./pages/Artists";
-import { ArtistDetail } from "./pages/Artist/ArtistDetail";
-import { Favourites } from "./pages/Favourites";
-import { Settings } from "./pages/Settings";
-import { Subscription } from "./pages/Subscription";
-import { MusicDetail } from "./pages/MusicDetail";
-import { MyArtistProfile } from "./pages/Artist/MyArtistProfile";
-import { Search } from "./pages/Search";
-import { TrendMusic } from "./pages/TrendMusic";
-import { MainPage } from "./pages/MainPage";
-import { ArtistDashboard } from "./pages/NFT/ArtistDashboard";
-import { DataProvider } from "./contexts/DataContext";
-import { MyTickets } from "./pages/NFT/MyTicket";
-import { NFTMarketplace } from "./pages/NFT/NFTMarketplace";
-import { NFTPage } from "./pages/NFT/NFTPage";
-import { ResellTicket } from "./pages/NFT/ResellTicket";
-import ProtectedRoute from "./pages/protected/ProtectedRouteProps ";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { Sidebar } from "@/components/Sidebar";
+import { MusicPlayerBar } from "@/components/MusicPlayerBar";
+import { Login } from "@/pages/Login";
+import { Register } from "@/pages/Register";
+import { Home } from "@/pages/Home";
+import { Playlists } from "@/pages/Playlists";
+import { PlaylistDetail } from "@/pages/PlaylistDetail";
+import { Albums } from "@/pages/Albums";
+import { AlbumDetail } from "@/pages/AlbumDetail";
+import { Artists } from "@/pages/Artists";
+import { ArtistDetail } from "@/pages/Artist/ArtistDetail";
+import { Favourites } from "@/pages/Favourites";
+import { Settings } from "@/pages/Settings";
+import { Subscription } from "@/pages/Subscription";
+import { MusicDetail } from "@/pages/MusicDetail";
+import { MyArtistProfile } from "@/pages/Artist/MyArtistProfile";
+import { Search } from "@/pages/Search";
+import { TrendMusic } from "@/pages/TrendMusic";
+import { MainPage } from "@/pages/MainPage";
+import { ArtistDashboard } from "@/pages/NFT/ArtistDashboard";
+import { DataProvider } from "@/contexts/DataContext";
+import { MyTickets } from "@/pages/NFT/MyTicket";
+import { NFTMarketplace } from "@/pages/NFT/NFTMarketplace";
+import { NFTPage } from "@/pages/NFT/NFTPage";
+import { ResellTicket } from "@/pages/NFT/ResellTicket";
+import ProtectedRoute from "@/pages/protected/ProtectedRouteProps ";
 import { Toaster } from "sonner";
+import { PaymentSuccess } from "@/pages/payment/PaymentSuccess";
+import { PaymentFailed } from "@/pages/payment/PaymentFailed";
 
-// // Protected Route wrapper
+// Protected Route wrapper
 // const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 //   children,
 // }) => {
@@ -48,7 +51,6 @@ const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0A0A0A] dark overflow-y-auto scrollbar-hide">
       <Sidebar />
-
       <main className="ml-64 overflow-y-auto scrollbar-hide">
         <Outlet />
       </main>
@@ -61,6 +63,8 @@ function AppRoutes() {
   return (
     <Router>
       <Routes>
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<AppLayout />}>
@@ -104,30 +108,50 @@ function AppRoutes() {
           <Route
             path="/resell/:id"
             element={
-              <DataProvider>
-                <ResellTicket />
-              </DataProvider>
+              <ProtectedRoute>
+                <DataProvider>
+                  <ResellTicket />
+                </DataProvider>
+              </ProtectedRoute>
             }
           />
           <Route
             path="my-artist-nft"
             element={
-              <DataProvider>
-                <ArtistDashboard />
-              </DataProvider>
+              <ProtectedRoute>
+                <DataProvider>
+                  <ArtistDashboard />
+                </DataProvider>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="nft"
             element={
-              <DataProvider>
-                <NFTPage />
-              </DataProvider>
+              <ProtectedRoute>
+                <DataProvider>
+                  <NFTPage />
+                </DataProvider>
+              </ProtectedRoute>
             }
           >
-            <Route index element={<NFTMarketplace />} />
-            <Route path="my-ticket" element={<MyTickets />} />
+            <Route
+              index
+              element={
+                <ProtectedRoute>
+                  <NFTMarketplace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my-ticket"
+              element={
+                <ProtectedRoute>
+                  <MyTickets />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Route>
 
@@ -140,8 +164,12 @@ export default function App() {
   return (
     <AuthProvider>
       <MusicPlayerProvider>
-        <AppRoutes />
-        <Toaster richColors position="top-right" />
+        <PayPalScriptProvider
+          options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID }}
+        >
+          <AppRoutes />
+          <Toaster richColors position="top-right" />
+        </PayPalScriptProvider>
       </MusicPlayerProvider>
     </AuthProvider>
   );

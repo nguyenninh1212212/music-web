@@ -1,4 +1,3 @@
-import { ICreateAlbum } from "@/lib/types";
 import api from "./axios";
 
 const albumApi = {
@@ -10,7 +9,7 @@ const albumApi = {
     return (await api.get(`/albums/${id}`)).data;
   },
 
-  createAlbum: async (formData: ICreateAlbum) =>
+  createAlbum: async (formData: FormData) =>
     await api.post("/albums/", formData, {
       headers: {
         "Content-Type": "multipart/form-data",

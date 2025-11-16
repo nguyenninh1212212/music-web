@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useData } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../../components/ui/button";
 import {
@@ -9,13 +8,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { Calendar, MapPin, QrCode, DollarSign } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  QrCode,
+  DollarSign,
+  TicketPercent,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useQuery } from "@tanstack/react-query";
+import { getMyTickets } from "@/api/nft";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AppCrash } from "../error/AppCrash";
+import { IEventTicket, IMyTicket } from "@/lib/types";
+import { ipfsToHttp } from "@/util/help";
 
 export const MyTickets = () => {
   const navigate = useNavigate();
-  const { purchasedTickets } = useData();
+  const { isAuthenticated } = useAuth();
   const { user } = useAuth();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["my-ticket"],
+    queryFn: () => {
+      return getMyTickets(1, 10);
+    },
+    enabled: isAuthenticated,
+    gcTime: 0,
+  });
+
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <AppCrash />;
+  console.log("🚀 ~ MyTickets ~ data:", data);
 
   if (!user) {
     return (
@@ -33,9 +57,7 @@ export const MyTickets = () => {
     );
   }
 
-  const userTickets = purchasedTickets.filter(
-    (t) => t.ownerAddress === user.walletAddress
-  );
+  const userTickets = data.tickets;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
@@ -62,44 +84,44 @@ export const MyTickets = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {userTickets.map((ticket) => (
+            {userTickets.map((ticket: IMyTicket) => (
               <div
-                key={ticket.purchaseId}
+                key={ticket.event.eventId}
                 className="rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20 overflow-hidden hover:shadow-[0_0_25px_rgba(0,255,128,0.4)] transition-all duration-300"
               >
-                <div className="aspect-[16/9] overflow-hidden relative">
+                <div className="aspect-[16/9] relative overflow-hidden">
+                  {ticket.isResell == true && (
+                    <div className="absolute -top-2 -right-2  p-3 ">
+                      <TicketPercent className="text-xl bg-red-500 text-white w-16 h-10 rounded-lg shadow-lg border-2 " />
+                    </div>
+                  )}
                   <img
-                    src={
-                      "https://artlogic-res.cloudinary.com/w_1200,c_limit,f_auto,fl_lossy,q_auto/ws-artlogicwebsite0889/usr/images/news/main_image/6/nft-bored-ape-yacht-club.png"
-                    }
+                    src={ipfsToHttp(ticket.event.coverImage)}
                     alt={""}
                     className="w-full aspect-square object-cover rounded-lg shadow-lg"
                   />
-                  dsa
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  {ticket.isListed && (
-                    <div className="absolute top-3 right-3 bg-yellow-500 text-black px-3 py-1 rounded-full text-[0.75rem]">
-                      Listed for Sale
-                    </div>
-                  )}
                 </div>
 
                 <div className="p-5 space-y-4">
                   <div>
-                    <h3 className="text-white mb-1">{ticket.eventTitle}</h3>
+                    <h3 className="text-white mb-1">{ticket.event.title}</h3>
                     <p className="text-[#00FF80] text-[0.875rem]">
-                      {ticket.artistName}
+                      {ticket.stageName}
                     </p>
                   </div>
 
                   <div className="space-y-2 text-[0.875rem]">
                     <div className="flex items-center gap-2 text-gray-400">
                       <Calendar size={14} className="text-[#00FF80]" />
-                      <span>{new Date(ticket.date).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(ticket.event.date).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <MapPin size={14} className="text-[#00FF80]" />
-                      <span className="truncate">{ticket.venue}</span>
+                      <span className="truncate">{ticket.event.location}</span>
                     </div>
                   </div>
 
@@ -114,24 +136,27 @@ export const MyTickets = () => {
                       <DialogContent className="bg-[#0A0A0A] border-[#00FF80]/30 max-w-md">
                         <DialogHeader>
                           <DialogTitle className="text-white">
-                            {ticket.eventTitle}
+                            {ticket.event.title}
                           </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 pt-4">
                           <div className="bg-white p-6 rounded-lg flex justify-center">
-                            <QRCodeSVG value={ticket.qrCode} size={250} />
+                            <QRCodeSVG
+                              value={`ticket-${ticket.event.contractAddress}-${ticket.tokenId}`}
+                              size={250}
+                            />
                           </div>
                           <div className="text-center space-y-2">
                             <p className="text-gray-400 text-[0.875rem]">
                               Scan this code at the venue entrance
                             </p>
                             <p className="text-[#00FF80] text-[0.875rem] font-mono">
-                              {ticket.qrCode}
+                              {ticket.event.baseUri}
                             </p>
                           </div>
                           <Button
                             onClick={() =>
-                              navigate(`/nft/verify/${ticket.qrCode}`)
+                              navigate(`/nft/verify/${ticket.event.baseUri}`)
                             }
                             variant="outline"
                             className="w-full border-[#00FF80]/30 text-[#00FF80]"
@@ -142,9 +167,11 @@ export const MyTickets = () => {
                       </DialogContent>
                     </Dialog>
 
-                    {!ticket.isListed && !ticket.isUsed && (
+                    {!ticket.isResell && (
                       <Button
-                        onClick={() => navigate(`/resell/${ticket.purchaseId}`)}
+                        onClick={() =>
+                          navigate(`/resell/${ticket.event.eventId}`)
+                        }
                         variant="outline"
                         className="flex-1 border-[#00FF80]/30 text-[#00FF80] hover:bg-[#00FF80]/10"
                       >
@@ -156,7 +183,7 @@ export const MyTickets = () => {
 
                   <div className="pt-3 border-t border-[#00FF80]/20 text-[0.75rem] text-gray-400">
                     Purchased:{" "}
-                    {new Date(ticket.purchaseDate).toLocaleDateString()}
+                    {new Date(ticket.event.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>

@@ -12,8 +12,7 @@ const navItems = [
 ];
 export const Home: React.FC = () => {
   return (
-    <div className="p-5 pb-32"> 
-      {/* Hero Banner */}
+    <div className="p-5 pb-32">
       <NavbarHorizontal navItems={navItems} navActive={["/"]} />
       <Outlet />
     </div>

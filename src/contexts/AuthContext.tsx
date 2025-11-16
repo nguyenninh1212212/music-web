@@ -16,10 +16,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (form: ILoginForm) => void;
+  googleLogin: (tokenId: string) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   isArtist: boolean;
+  setUser: React.Dispatch<React.SetStateAction<IUserForm | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,7 +46,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const storedUser = localStorage.getItem("user");
       const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-      console.log("🚀 ~ AuthProvider ~ parsedUser:", parsedUser);
       if (parsedUser && parsedUser.user && parsedUser.user?.token) {
         setUser(parsedUser);
       } else {
@@ -58,6 +59,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const googleMutation = useMutation({
+    mutationFn: async (idToken: string) => {
+      const res = await userApi.googleLogin(idToken);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      localStorage.setItem("user", JSON.stringify(data));
+      setUser(data);
+      window.location.href = "/";
+      toast.success("Đăng nhập thành công");
+    },
+    onError: (error) => {
+      console.error("Login thất bại", error);
+    },
+  });
+
   const loginMutation = useMutation({
     mutationFn: async (form: ILoginForm) => {
       const res = await userApi.login(form);
@@ -65,17 +82,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     onSuccess: (data) => {
       localStorage.setItem("user", JSON.stringify(data));
-
       setUser(data);
       window.location.href = "/";
     },
     onError: (error: any) => {
-      toast.warning("Sai mật khẩu hoặc tài khoản");
+      console.log("🚀 ~ AuthProvider ~ error:", error);
+      toast.warning(
+        error.response?.data?.message || "Login failed. Please try again."
+      );
     },
   });
 
   const login = (form: ILoginForm) => {
     loginMutation.mutate(form);
+  };
+
+  const googleLogin = (tokenId: string) => {
+    googleMutation.mutate(tokenId);
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -109,6 +132,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         updateUser,
         isArtist,
+        googleLogin,
+        setUser,
       }}
     >
       {children}

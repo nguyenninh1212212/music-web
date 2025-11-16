@@ -42,11 +42,13 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
         </button>
       </div>
       <h3 className="text-white truncate mb-1 text-center">
-        {artist.stageName}
+        {artist.stageName || artist.name}
       </h3>
-      <p className="text-gray-400 text-sm text-center">
-        {formatFollowers(artist.followerCount)} Người theo dõi
-      </p>
+      {artist.followerCount && (
+        <p className="text-gray-400 text-sm text-center">
+          {formatFollowers(artist.followerCount)} Người theo dõi
+        </p>
+      )}
     </div>
   );
 };

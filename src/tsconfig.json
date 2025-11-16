@@ -26,6 +26,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "pages/Artist/MyArtistProfile.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "pages/Artist/MyArtistProfile.tsx","./src","src/types"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
