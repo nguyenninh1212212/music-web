@@ -6,23 +6,22 @@ import { toast } from "sonner";
 import { Loader2, CheckCircle2, ShoppingCart } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logPurchase } from "@/api/nft";
-
-// Import your ABI and hook
-import EventTicketABI from "../abi/EventTicket.json";
-// import { useLogPurchase } from "../lib/hook/useLogPurchase";
+import EventTicketABI from "@/abi/EventTicket.json";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BuyTicketButtonProps {
   eventId: string;
   contractAddress: string;
   price: string;
-  ownerAddress?: string;
 }
 
 interface INftLogPurchase {
   eventId: string;
   tokenId: string;
   txHash: string;
+  userId: string;
 }
+
 const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
   eventId,
   contractAddress,
@@ -32,20 +31,19 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
   const [loadingMessage, setLoadingMessage] = useState("");
   const [tokenId, setTokenId] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const { user } = useAuth();
+
   const mutation = useMutation({
     mutationFn: (payload: INftLogPurchase) => {
       return logPurchase(payload);
     },
     onSuccess: () => {
-      toast.success("Log purchase to offchain success");
+      toast.success("Lưu thông tin vé thành công");
     },
     onError: (err) => {
-      toast.success("Log purchase fail : " + err);
+      toast.error("Lưu thông tin vé thất bại: " + err);
     },
   });
-
-  // Uncomment when using real hook
-  // const logPurchaseMutation = useLogPurchase();
 
   const parseTokenIdFromReceipt = (logs: readonly Log[]): string | null => {
     const transferEventInterface = new Interface([
@@ -59,14 +57,13 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
           return parsedLog.args.tokenId.toString();
         }
       } catch {
-        // Continue to next log if parsing fails
+        continue;
       }
     }
     return null;
   };
 
   const handleBuyTicket = async () => {
-    // Validate MetaMask
     if (!window.ethereum) {
       toast.error("Vui lòng cài đặt MetaMask để tiếp tục!");
       return;
@@ -76,35 +73,79 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
     setLoadingMessage("Đang khởi tạo...");
 
     try {
-      // Initialize provider and signer
+      // ✅ 1. Initialize provider và request connection
       const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
+
+      // ✅ 2. Lấy địa chỉ ví từ MetaMask (KHÔNG dùng từ DB)
       const userAddress = await signer.getAddress();
 
-      // Validate price format
+      if (!userAddress || userAddress === ethers.ZeroAddress) {
+        throw new Error("Không thể lấy địa chỉ ví từ MetaMask");
+      }
+
+      console.log("🔍 Connected wallet:", userAddress);
+
+      // ✅ 3. Optional: Check với DB (chỉ warning nếu khác)
+      const dbWalletAddress = user?.user?.walletAddress;
+      if (
+        dbWalletAddress &&
+        dbWalletAddress.toLowerCase() !== userAddress.toLowerCase()
+      ) {
+        toast.warning(
+          `Ví MetaMask khác với ví trong hệ thống!\n` +
+            `Tiếp tục với ví: ${userAddress.slice(0, 6)}...${userAddress.slice(
+              -4
+            )}`
+        );
+      }
+
+      // ✅ 4. Validate price
+      if (!price || price === "0") {
+        throw new Error("Giá vé không hợp lệ");
+      }
+
       let priceWei: bigint;
       try {
         priceWei = ethers.parseEther(price);
       } catch (error) {
-        throw new Error("Giá vé không hợp lệ");
+        throw new Error("Không thể chuyển đổi giá vé");
       }
 
-      // Check user balance
+      // ✅ 5. Check balance
       setLoadingMessage("Đang kiểm tra số dư...");
       const balance = await provider.getBalance(userAddress);
+
+      console.log("💰 Balance:", ethers.formatEther(balance), "ETH");
+      console.log("💸 Price:", ethers.formatEther(priceWei), "ETH");
+
       if (balance < priceWei) {
-        throw new Error("Số dư không đủ để mua vé");
+        throw new Error(
+          `Số dư không đủ!\n` +
+            `Cần: ${ethers.formatEther(priceWei)} ETH\n` +
+            `Có: ${ethers.formatEther(balance)} ETH`
+        );
       }
 
-      // Create contract instance
-      // Replace with actual ABI
+      // ✅ 6. Validate contract
+      if (!contractAddress) {
+        throw new Error("Địa chỉ contract không hợp lệ");
+      }
+
+      const code = await provider.getCode(contractAddress);
+      if (code === "0x") {
+        throw new Error("Contract chưa được deploy tại địa chỉ này");
+      }
+
+      // ✅ 7. Create contract instance
       const contract = new ethers.Contract(
         contractAddress,
-        EventTicketABI.abi, // EventTicketABI.abi
+        EventTicketABI.abi,
         signer
       );
 
-      // Request transaction
+      // ✅ 8. Request transaction
       setLoadingMessage("Đang chờ xác nhận từ MetaMask...");
       const tx = await contract.mintTicket({ value: priceWei });
       const currentTxHash = tx.hash;
@@ -112,65 +153,70 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
 
       toast.info(`Giao dịch đã được gửi: ${currentTxHash.slice(0, 10)}...`);
 
+      // ✅ 9. Wait for confirmation
       setLoadingMessage("Đang xử lý giao dịch trên blockchain...");
       const receipt = await tx.wait();
 
-      if (!receipt) {
-        throw new Error("Giao dịch thất bại");
+      if (!receipt || receipt.status === 0) {
+        throw new Error("Giao dịch thất bại hoặc bị revert");
       }
 
-      if (receipt.status === 0) {
-        throw new Error("Giao dịch bị revert");
-      }
-
-      // Parse token ID from logs
+      // ✅ 10. Parse token ID
       const mintedTokenId = parseTokenIdFromReceipt(receipt.logs);
       if (!mintedTokenId) {
         throw new Error("Không thể lấy Token ID từ biên lai giao dịch");
       }
 
       setTokenId(mintedTokenId);
+      console.log("✅ Token ID:", mintedTokenId);
 
-      // Log purchase to backend
+      // ✅ 11. Log to backend
       setLoadingMessage("Đang lưu thông tin vé...");
       try {
-        // Uncomment when using real mutation
-        mutation.mutate({
+        await mutation.mutateAsync({
           eventId,
           tokenId: mintedTokenId,
           txHash: currentTxHash,
+          userId: userAddress, // Dùng userId hoặc wallet address
         });
-        // Simulated async call
-        await new Promise((resolve) => setTimeout(resolve, 500));
 
         toast.success(
           <div className="flex flex-col gap-1">
             <p className="font-semibold">Mua vé thành công! 🎉</p>
-            <p className="text-sm">Token ID: {mintedTokenId}</p>
-          </div>
+            <p className="text-sm">Token ID: #{mintedTokenId}</p>
+            <p className="text-xs text-gray-400">
+              {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+            </p>
+          </div>,
+          { duration: 5000 }
         );
       } catch (dbError: any) {
-        // Token minted but DB save failed - still show success
         console.error("Database error:", dbError);
         toast.warning(
-          "Vé đã được mint nhưng có lỗi khi lưu vào hệ thống. Vui lòng liên hệ support."
+          `Vé đã mint thành công (Token #${mintedTokenId}) nhưng có lỗi khi lưu vào DB. ` +
+            `Vui lòng liên hệ support với TxHash: ${currentTxHash}`
         );
       }
     } catch (error: any) {
-      console.error("Purchase error:", error);
+      console.error("❌ Purchase error:", error);
 
-      // Handle specific error types
       let errorMessage = "Đã xảy ra lỗi khi mua vé";
 
       if (error.code === 4001) {
         errorMessage = "Bạn đã từ chối giao dịch";
       } else if (error.code === "INSUFFICIENT_FUNDS") {
-        errorMessage = "Số dư không đủ";
+        errorMessage = "Số dư không đủ để thực hiện giao dịch";
+      } else if (error.code === "INVALID_ARGUMENT") {
+        errorMessage =
+          "Tham số không hợp lệ: " + (error.argument || error.message);
+      } else if (error.code === "CALL_EXCEPTION") {
+        errorMessage =
+          "Contract call thất bại. Có thể vé đã hết hoặc event đã kết thúc.";
       } else if (error.message) {
         errorMessage = error.message;
       }
 
-      toast.error(errorMessage);
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setIsLoading(false);
       setLoadingMessage("");
@@ -188,7 +234,7 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
 
         <div className="bg-white p-4 rounded-xl inline-block shadow-lg">
           <QRCodeSVG
-            value={`ticket-${eventId}-${tokenId}`}
+            value={`ticket-${contractAddress}-${tokenId}`}
             size={200}
             level="H"
             includeMargin
@@ -220,7 +266,7 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
   return (
     <Button
       onClick={handleBuyTicket}
-      disabled={isLoading}
+      disabled={isLoading || !user}
       className="w-full bg-gradient-to-r from-[#00FF80] to-[#00CC66] text-black font-semibold hover:from-[#00FF80]/90 hover:to-[#00CC66]/90 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       size="lg"
     >
@@ -229,6 +275,8 @@ const BuyTicketButton: React.FC<BuyTicketButtonProps> = ({
           <Loader2 className="w-4 h-4 animate-spin" />
           {loadingMessage}
         </span>
+      ) : !user ? (
+        "Vui lòng đăng nhập"
       ) : (
         <span className="flex items-center gap-2">
           <ShoppingCart className="w-4 h-4" />

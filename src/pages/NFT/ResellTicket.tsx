@@ -33,7 +33,7 @@ export const ResellTicket = () => {
     );
   }
 
-  if (!ticket || ticket.ownerAddress !== user.walletAddress) {
+  if (!ticket || ticket.ownerAddress !== user?.user.walletAddress) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-4">

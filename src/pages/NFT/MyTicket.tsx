@@ -19,9 +19,12 @@ import { QRCodeSVG } from "qrcode.react";
 import { useQuery } from "@tanstack/react-query";
 import { getMyTickets } from "@/api/nft";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { AppCrash } from "../error/AppCrash";
+import { AppCrash } from "./error/AppCrash";
 import { IEventTicket, IMyTicket } from "@/lib/types";
 import { ipfsToHttp } from "@/util/help";
+import DialogResell from "@/components/DialogResell";
+import { ethers } from "ethers";
+import ResaleMarketplaceABI from "@/abi/ResaleMarketplace.json";
 
 export const MyTickets = () => {
   const navigate = useNavigate();
@@ -39,7 +42,6 @@ export const MyTickets = () => {
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AppCrash />;
-  console.log("🚀 ~ MyTickets ~ data:", data);
 
   if (!user) {
     return (
@@ -168,16 +170,16 @@ export const MyTickets = () => {
                     </Dialog>
 
                     {!ticket.isResell && (
-                      <Button
-                        onClick={() =>
-                          navigate(`/resell/${ticket.event.eventId}`)
+                      <DialogResell
+                        contractAddress={ticket.event.contractAddress}
+                        title={ticket.event.title}
+                        userTicketId={ticket.userTicketId}
+                        oldPrice={ticket.event.price}
+                        resaleMarketplaceAddress={
+                          import.meta.env.VITE_RESALE_CONTRACT_ADDRESS
                         }
-                        variant="outline"
-                        className="flex-1 border-[#00FF80]/30 text-[#00FF80] hover:bg-[#00FF80]/10"
-                      >
-                        <DollarSign size={16} className="mr-2" />
-                        Resell
-                      </Button>
+                        tokenId={ticket.tokenId}
+                      />
                     )}
                   </div>
 

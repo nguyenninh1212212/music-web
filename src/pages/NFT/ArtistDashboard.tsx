@@ -26,6 +26,7 @@ import { useMutation } from "@tanstack/react-query";
 import { ICreateTicket } from "@/lib/types";
 import FactoryABI from "../../../../smart-contract-new/artifacts/contracts/TicketFactory.sol/TicketFactory.json";
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/util/ipfs";
+import { LocationPicker } from "@/components/LocationPicker";
 
 export const ArtistDashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export const ArtistDashboard = () => {
     maxSupply: "",
     saleDeadline: "",
   });
+  console.log("🚀 ~ ArtistDashboard ~ formData:", formData);
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -158,6 +160,7 @@ export const ArtistDashboard = () => {
       // 4. Connect to blockchain
       toast.info("Connecting to blockchain...");
       const provider = new ethers.BrowserProvider(window.ethereum);
+
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
       const abi = FactoryABI.abi;
@@ -354,7 +357,7 @@ export const ArtistDashboard = () => {
                 <Label htmlFor="coverFile" className="text-gray-300">
                   Cover Image *
                 </Label>
-                <div className="mt-2 flex flex-col gap-3">
+                <div className="mt-2 flex flex-col gap-3 items-center">
                   {formData.coverFile && (
                     <img
                       src={URL.createObjectURL(formData.coverFile)}
@@ -411,75 +414,74 @@ export const ArtistDashboard = () => {
 
                 {/* Location */}
                 <div>
-                  <Label htmlFor="location" className="text-gray-300">
+                  <Label htmlFor="location" className="text-gray-300 mb-2 ">
                     Location
                   </Label>
-                  <Input
-                    id="location"
+                  <LocationPicker
                     value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
+                    onSelect={(address) =>
+                      setFormData({ ...formData, location: address })
                     }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="Crypto Arena, Los Angeles"
                   />
                 </div>
 
                 {/* Sale Deadline */}
-                <div>
-                  <Label htmlFor="saleDeadline" className="text-gray-300">
-                    Sale Deadline (Optional - Default: 7 days)
-                  </Label>
-                  <Input
-                    id="saleDeadline"
-                    type="datetime-local"
-                    value={formData.saleDeadline}
-                    min={new Date().toISOString().slice(0, 16)}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        saleDeadline: e.target.value,
-                      });
-                    }}
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                  />
-                </div>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <Label htmlFor="saleDeadline" className="text-gray-300">
+                      Sale Deadline (Optional - Default: 7 days)
+                    </Label>
+                    <Input
+                      id="saleDeadline"
+                      type="datetime-local"
+                      value={formData.saleDeadline}
+                      min={new Date().toISOString().slice(0, 16)}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          saleDeadline: e.target.value,
+                        });
+                      }}
+                      className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
+                    />
+                  </div>
 
-                {/* Price */}
-                <div>
-                  <Label htmlFor="priceETH" className="text-gray-300">
-                    Price (ETH) *
-                  </Label>
-                  <Input
-                    id="priceETH"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="0.5"
-                  />
-                </div>
+                  {/* Price */}
+                  <div>
+                    <Label htmlFor="priceETH" className="text-gray-300">
+                      Price (ETH) *
+                    </Label>
+                    <Input
+                      id="priceETH"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
+                      placeholder="0.5"
+                    />
+                  </div>
 
-                {/* Max Supply */}
-                <div>
-                  <Label htmlFor="maxSupply" className="text-gray-300">
-                    Max Supply *
-                  </Label>
-                  <Input
-                    id="maxSupply"
-                    type="number"
-                    min="1"
-                    value={formData.maxSupply}
-                    onChange={(e) =>
-                      setFormData({ ...formData, maxSupply: e.target.value })
-                    }
-                    className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
-                    placeholder="50"
-                  />
+                  {/* Max Supply */}
+                  <div>
+                    <Label htmlFor="maxSupply" className="text-gray-300">
+                      Max Supply *
+                    </Label>
+                    <Input
+                      id="maxSupply"
+                      type="number"
+                      min="1"
+                      value={formData.maxSupply}
+                      onChange={(e) =>
+                        setFormData({ ...formData, maxSupply: e.target.value })
+                      }
+                      className="mt-2 bg-white/5 border-[#00FF80]/30 text-white"
+                      placeholder="50"
+                    />
+                  </div>
                 </div>
               </div>
 

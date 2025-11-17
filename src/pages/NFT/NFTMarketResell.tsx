@@ -11,26 +11,27 @@ import {
 } from "../../components/ui/select";
 import { Search, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getTickets } from "@/api/nft";
+import { getResellTickets } from "@/api/nft";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { AppCrash } from "./error/AppCrash";
-import { IEventTicket } from "@/lib/types";
+import { IEventTicket, IResellTicket } from "@/lib/types";
+import { ResellTicketCard } from "@/components/ResellTicketCard";
 
-export const NFTMarketplace = () => {
+export const NFTMarketResell = () => {
   const { tickets } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["nft"],
+    queryKey: ["nft-resell"],
     queryFn: async () => {
-      return getTickets();
+      return getResellTickets();
     },
   });
+  console.log("🚀 ~ NFTMarketResell ~ data:", data);
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AppCrash />;
-  console.log("🚀 ~ NFTMarketplace ~ data:", data);
 
   const genres = ["all", ...Array.from(new Set(tickets.map((t) => t.genre)))];
 
@@ -112,8 +113,14 @@ export const NFTMarketplace = () => {
         {/* Tickets Grid */}
         {data.tickets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.tickets.map((ticket: IEventTicket) => (
-              <TicketCard key={ticket.eventId} ticket={ticket} />
+            {data.tickets.map((ticket: IResellTicket) => (
+              <ResellTicketCard
+                key={ticket.event.eventId}
+                resaleMarketplaceAddress={
+                  import.meta.env.VITE_RESALE_CONTRACT_ADDRESS
+                }
+                ticket={ticket}
+              />
             ))}
           </div>
         ) : (

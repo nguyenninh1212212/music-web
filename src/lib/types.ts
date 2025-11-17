@@ -366,3 +366,15 @@ export interface ICreateTicket {
   maxSupply: string;
   saleDeadline: string; // Sẽ lưu ở định dạng "YYYY-MM-DDTHH:mm"
 }
+
+export interface IResellTicket {
+  isSold: false;
+  originalTicketId: string;
+  price: string;
+  resellTicketId: string;
+  sellerId: string;
+  stageName: string;
+  buyerId: string;
+  event: IEventTicket;
+  tokenId: string;
+}

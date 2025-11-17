@@ -38,6 +38,7 @@ import ProtectedRoute from "@/pages/protected/ProtectedRouteProps ";
 import { Toaster } from "sonner";
 import { PaymentSuccess } from "@/pages/payment/PaymentSuccess";
 import { PaymentFailed } from "@/pages/payment/PaymentFailed";
+import { NFTMarketResell } from "./pages/NFT/NFTMarketResell";
 
 // Protected Route wrapper
 // const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -105,16 +106,7 @@ function AppRoutes() {
           <Route path="subscription" element={<Subscription />} />
           <Route path="music/:id" element={<MusicDetail />} />
           <Route path="my-artist-profile" element={<MyArtistProfile />} />
-          <Route
-            path="/resell/:id"
-            element={
-              <ProtectedRoute>
-                <DataProvider>
-                  <ResellTicket />
-                </DataProvider>
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="my-artist-nft"
             element={
@@ -149,6 +141,14 @@ function AppRoutes() {
               element={
                 <ProtectedRoute>
                   <MyTickets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="resell"
+              element={
+                <ProtectedRoute>
+                  <NFTMarketResell />
                 </ProtectedRoute>
               }
             />
