@@ -35,6 +35,10 @@ const userApi = {
   addWallet: (walletAddress: string) => {
     return axiosClient.post(`${BASE_PATH}/add-wallet`, { walletAddress });
   },
+
+  unLinkGoogle: () => {
+    return axiosClient.get(`${BASE_PATH}/google/unlink`);
+  },
 };
 
 export default userApi;

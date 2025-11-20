@@ -7,7 +7,7 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { Sidebar } from "@/components/Sidebar";
 import { MusicPlayerBar } from "@/components/MusicPlayerBar";
@@ -33,12 +33,12 @@ import { DataProvider } from "@/contexts/DataContext";
 import { MyTickets } from "@/pages/NFT/MyTicket";
 import { NFTMarketplace } from "@/pages/NFT/NFTMarketplace";
 import { NFTPage } from "@/pages/NFT/NFTPage";
-import { ResellTicket } from "@/pages/NFT/ResellTicket";
 import ProtectedRoute from "@/pages/protected/ProtectedRouteProps ";
 import { Toaster } from "sonner";
 import { PaymentSuccess } from "@/pages/payment/PaymentSuccess";
 import { PaymentFailed } from "@/pages/payment/PaymentFailed";
 import { NFTMarketResell } from "./pages/NFT/NFTMarketResell";
+import ArtistRegistrationForm from "@/pages/Artist/ArtistRegistrationForm";
 
 // Protected Route wrapper
 // const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -103,9 +103,17 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route path="subscription" element={<Subscription />} />
+          <Route
+            path="subscription"
+            element={
+              <ProtectedRoute>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
           <Route path="music/:id" element={<MusicDetail />} />
           <Route path="my-artist-profile" element={<MyArtistProfile />} />
+          <Route path="/artist-register" element={<ArtistRegistrationForm />} />
 
           <Route
             path="my-artist-nft"

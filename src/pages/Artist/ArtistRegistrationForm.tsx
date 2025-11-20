@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import { useArtist } from "@/lib/hook/useArtist";
+import { toast } from "sonner";
 
 interface FormData {
   stageName: string;
@@ -57,6 +59,7 @@ const ArtistRegistrationForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const { registerArtist } = useArtist();
 
   const handleFileChange = (type: "avatar" | "banner", file: File | null) => {
     if (file) {
@@ -105,17 +108,29 @@ const ArtistRegistrationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    validateForm();
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const payload = new FormData();
+      payload.append("stageName", formData.stageName);
+      payload.append("bio", formData.bio || "");
+      payload.append("avatarFile", formData.avatar!);
+      payload.append("bannerFile", formData.banner!);
+      payload.append("youtubeUrl", formData.youtube || "");
+      payload.append("facebookUrl", formData.facebook || "");
+      payload.append("instagramUrl", formData.instagram || "");
+      formData.platforms.forEach((p) => payload.append("platforms[]", p));
 
-    setIsSubmitting(false);
-    setShowSuccessModal(true);
+      await registerArtist.mutateAsync(payload);
+
+      setShowSuccessModal(true); // show Dialog success
+    } catch (err) {
+      toast.error("Tạo hồ sơ thất bại!");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

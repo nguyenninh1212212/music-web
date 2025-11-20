@@ -136,7 +136,7 @@ export const ArtistDashboard = () => {
 
       // 2. Upload image to IPFS
       toast.info("Uploading image to IPFS...");
-      const imageResult = await uploadFileToIPFS(formData.coverFile);
+      // const imageResult = await uploadFileToIPFS(formData.coverFile);
 
       // 3. Create and upload metadata to IPFS
       toast.info("Uploading metadata to IPFS...");
@@ -154,7 +154,8 @@ export const ArtistDashboard = () => {
       };
 
       const metadataCID = await uploadJSONToIPFS(metadata);
-      const _baseURI = `ipfs://${metadataCID}/`;
+      // const _baseURI = `ipfs://${metadataCID}/`;
+      const _baseURI = `ipfs://example/`;
       const factoryAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
       // 4. Connect to blockchain
@@ -257,7 +258,8 @@ export const ArtistDashboard = () => {
         saleDeadline: _saleDeadline.toString(),
         title: formData.title,
         maxSupply: _maxSupply,
-        coverImage: imageResult.ipfsUrl,
+        coverImage: "ipfs://example/",
+        // coverImage: imageResult.ipfsUrl,
       });
     } catch (error: any) {
       console.error("❌ Error creating ticket:", error);
@@ -485,14 +487,17 @@ export const ArtistDashboard = () => {
                 </div>
               </div>
 
-              <Button
-                onClick={handleCreateTicket}
-                disabled={isCreating}
-                className="mt-6 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Upload className="mr-2" size={18} />
-                {isCreating ? "Creating..." : "Mint NFT Ticket"}
-              </Button>
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={handleCreateTicket}
+                  disabled={isCreating}
+                  // 3. Bỏ `mt-6` khỏi đây
+                  className="bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)] disabled:opacity-50 disabled:cursor-not-allowed "
+                >
+                  <Upload className="mr-2" size={18} />
+                  {isCreating ? "Creating..." : "Mint NFT Ticket"}
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { SongCard } from "../../components/SongCard";
 import { AlbumCard } from "../../components/AlbumCard";
@@ -17,11 +17,12 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { useMusicPlayer } from "../../contexts/MusicPlayerContext";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import artistApi from "@/api/artist";
 import { IAlbumCard } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export const ArtistDetail: React.FC = () => {
   const { id } = useParams();
@@ -29,6 +30,24 @@ export const ArtistDetail: React.FC = () => {
   const { playSong } = useMusicPlayer();
 
   const { user } = useAuth();
+  const muatationFollow = useMutation({
+    mutationFn: () => artistApi.followArtist(id || ""),
+    onSuccess: () => {
+      setIsFollowing(true);
+      toast.success("Đã follow");
+    },
+    onError: (err) => {
+      toast.error("Error follow" + err);
+    },
+  });
+  const muatationUnFollow = useMutation({
+    mutationFn: () => artistApi.unfollowArtist(id || ""),
+    onSuccess: () => {
+      setIsFollowing(false);
+      toast.success("Đã unfollow");
+    },
+    onError: (err) => toast.error("Error unfollow " + err),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["artistDetail", id],
@@ -39,13 +58,29 @@ export const ArtistDetail: React.FC = () => {
     },
     enabled: !!id,
   });
-  console.log("🚀 ~ ArtistDetail ~ data:", data);
+  useEffect(() => {
+    if (data?.artistJson) {
+      setIsFollowing(data.artistJson.isFollow);
+    }
+  }, [data]);
 
-  if (isLoading) return;
+  if (isLoading) return "";
+  if (!data || !data.artistJson) {
+    return <div className="text-white p-8">Artist not found</div>;
+  }
 
   const artist = data.artistJson;
   const mountlyView = data.monthlyViews;
+
   console.log("🚀 ~ ArtistDetail ~ mountlyView:", mountlyView);
+  if (!id) toast.warning("Artist doesn't exist");
+
+  const handleFollow = () => {
+    muatationFollow.mutate();
+  };
+  const handleUnfollow = () => {
+    muatationUnFollow.mutate();
+  };
 
   const handlePlayTopSongs = () => {
     playSong(artist.topSongs[0]);
@@ -99,25 +134,26 @@ export const ArtistDetail: React.FC = () => {
           <span>Play</span>
         </button>
         <>
-          {id == user?.user?.artistId ? (
-            <button
-              onClick={() => setIsFollowing(!isFollowing)}
-              className={`flex items-center gap-2 px-6 py-3 border rounded-full transition-all ${
-                isFollowing
-                  ? "border-[#00FF80] text-[#00FF80] shadow-[0_0_15px_rgba(0,255,128,0.3)]"
-                  : "border-gray-700 text-white hover:border-[#00FF80] hover:text-[#00FF80]"
-              }`}
-            >
-              {isFollowing ? (
-                <UserCheck className="w-5 h-5" />
-              ) : (
-                <UserPlus className="w-5 h-5" />
-              )}
-              <span>{isFollowing ? "Following" : "Follow"}</span>
-            </button>
-          ) : (
-            <></>
-          )}
+          {id &&
+            (user?.user.artistId !== id ? (
+              <button
+                onClick={!isFollowing ? handleFollow : handleUnfollow}
+                className={`flex items-center gap-2 px-6 py-3 border rounded-full transition-all ${
+                  isFollowing
+                    ? "border-[#00FF80] text-[#00FF80] shadow-[0_0_15px_rgba(0,255,128,0.3)]"
+                    : "border-gray-700 text-white hover:border-[#00FF80] hover:text-[#00FF80]"
+                }`}
+              >
+                {isFollowing ? (
+                  <UserCheck className="w-5 h-5" />
+                ) : (
+                  <UserPlus className="w-5 h-5" />
+                )}
+                <span>{isFollowing ? "Following" : "Follow"}</span>
+              </button>
+            ) : (
+              <></>
+            ))}
         </>
       </div>
 
@@ -147,7 +183,7 @@ export const ArtistDetail: React.FC = () => {
 
           <TabsContent value="top-songs" className="mt-6">
             <div className="space-y-1">
-              {artist.songs.map((song, index) => (
+              {artist.songs.map((song: any, index: any) => (
                 <SongCard key={song.id} song={song} index={index} />
               ))}
             </div>

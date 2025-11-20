@@ -2,7 +2,7 @@ import { IArtistCreate } from "@/lib/types";
 import api from "./axios"; // Giả định 'api' là axios instance đã cấu hình
 
 const artistApi = {
-  createArtist: async (formData: IArtistCreate) =>
+  createArtist: async (formData: FormData) =>
     await api.post("/artists", formData, {
       headers: {
         "Content-Type": "multipart/form-data",

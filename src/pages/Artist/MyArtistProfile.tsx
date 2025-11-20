@@ -15,6 +15,7 @@ import {
   Disc,
   Play,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -61,6 +62,7 @@ import { toast } from "sonner";
 import songApi from "@/api/songs";
 import albumApi from "@/api/album"; // SỬA: Thêm import albumApi
 import { AlbumCard } from "@/components/AlbumCard";
+import { useSong } from "@/lib/hook/useSong";
 
 const allGenres = [
   "Electronic",
@@ -112,6 +114,8 @@ export const MyArtistProfile: React.FC = () => {
   const [songFile, setSongFile] = useState<File | null>(null);
   const [songCoverFile, setSongCoverFile] = useState<File | null>(null);
   const [albumCoverFile, setAlbumCoverFile] = useState<File | null>(null);
+
+  const { createSong, updateSong, removeSong, restoreSong } = useSong();
 
   // SỬA: Lấy dữ liệu profile từ React Query
   // `profileResponse` sẽ là object từ axios (chứa `data`, `status`...)
@@ -258,18 +262,17 @@ export const MyArtistProfile: React.FC = () => {
     updateProfileMutation.mutate(formData);
   };
 
-  const handleAddSong = () => {
+  const handleAddSong = async () => {
     if (!songForm.title || !songFile || !songCoverFile) {
       return toast.error("Title, audio file, and cover file are required.");
     }
 
     const formData = new FormData();
     formData.append("title", songForm.title);
-    formData.append("duration", songForm.duration.toString());
     formData.append("songFile", songFile);
-    formData.append("covereFile", songCoverFile);
+    formData.append("coverFile", songCoverFile);
 
-    createSongMutation.mutate(formData);
+    createSong.mutateAsync(formData);
   };
 
   const handleDeleteSong = (id: string) => {
@@ -509,7 +512,6 @@ export const MyArtistProfile: React.FC = () => {
                   <DialogTitle>Add New Song</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
-                  {/* ... (Input cho title, album, duration, status) ... */}
                   <div>
                     <Label>Song Title *</Label>
                     <Input
@@ -556,11 +558,15 @@ export const MyArtistProfile: React.FC = () => {
                         !songForm.title ||
                         !songFile ||
                         !songCoverFile ||
-                        createSongMutation.isPending
+                        createSong.isPending // <-- dùng isLoading
                       }
-                      className="flex-1 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)]"
+                      className="flex-1 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)] flex justify-center items-center"
                     >
-                      {createSongMutation.isPending ? "Adding..." : "Add Song"}
+                      {createSong.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        "Add Song"
+                      )}
                     </Button>
                     <Button
                       onClick={() => setIsAddingSong(false)}

@@ -25,13 +25,22 @@ const navItems = [
 
 const navArtist = [
   { name: "Hồ sơ nghệ sĩ", path: "/my-artist-profile", icon: User },
+  {
+    name: "Đăng ký nghệ sỹ",
+    path: "/artist-register",
+    icon: User,
+  },
   { name: "NFT dashboard", path: "/my-artist-NFT", icon: Dock },
 ];
 
 export const Sidebar: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const isArtist = user?.user.artistId;
+  const subscriptions = user?.user?.subscription?.map((e) => e) || [];
+  const subscriptionArtist = subscriptions.find((e) => e.name === "ARTIST");
+  console.log("🚀 ~ Sidebar ~ subscriptionArtist:", subscriptionArtist);
+
   const loca = location.pathname;
 
   const allRootPaths = [
@@ -90,38 +99,75 @@ export const Sidebar: React.FC = () => {
           })}
 
           {/* Artist Links (giữ nguyên logic 'startsWith') */}
-          {isArtist && (
+          {subscriptionArtist && (
             <>
               <li className="pt-4 mt-4 border-t border-gray-800">
                 <p className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">
                   Công cụ nghệ sĩ
                 </p>
               </li>
-              {navArtist.map((item) => {
-                const Icon = item.icon;
-                const isActive = loca.startsWith(item.path); // Logic này đã đúng
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                        isActive
-                          ? "bg-[#00FF80]/10 text-[#00FF80] shadow-[0_0_10px_rgba(0,255,128,0.3)]"
-                          : "text-gray-400 hover:text-white hover:bg-[#1A1A1A]"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-5 h-5 ${
-                          isActive
-                            ? "drop-shadow-[0_0_8px_rgba(0,255,128,0.8)]"
-                            : ""
-                        }`}
-                      />
-                      <span>{item.name}</span>
-                    </Link>
-                  </li>
-                );
-              })}
+
+              {isArtist ? (
+                // Nếu có subscription ARTIST → hiện Hồ sơ nghệ sĩ + NFT dashboard
+                <>
+                  {navArtist
+                    .filter((item) => item.name !== "Đăng ký nghệ sỹ") // ẩn "Đăng ký nghệ sỹ"
+                    .map((item) => {
+                      const Icon = item.icon;
+                      const isActive = loca.startsWith(item.path);
+                      return (
+                        <li key={item.path}>
+                          <Link
+                            to={item.path}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                              isActive
+                                ? "bg-[#00FF80]/10 text-[#00FF80] shadow-[0_0_10px_rgba(0,255,128,0.3)]"
+                                : "text-gray-400 hover:text-white hover:bg-[#1A1A1A]"
+                            }`}
+                          >
+                            <Icon
+                              className={`w-5 h-5 ${
+                                isActive
+                                  ? "drop-shadow-[0_0_8px_rgba(0,255,128,0.8)]"
+                                  : ""
+                              }`}
+                            />
+                            <span>{item.name}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                </>
+              ) : (
+                // Nếu không có subscription ARTIST → chỉ hiện "Đăng ký nghệ sỹ"
+                navArtist
+                  .filter((item) => item.name === "Đăng ký nghệ sỹ")
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = loca.startsWith(item.path);
+                    return (
+                      <li key={item.path}>
+                        <Link
+                          to={item.path}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                            isActive
+                              ? "bg-[#00FF80]/10 text-[#00FF80] shadow-[0_0_10px_rgba(0,255,128,0.3)]"
+                              : "text-gray-400 hover:text-white hover:bg-[#1A1A1A]"
+                          }`}
+                        >
+                          <Icon
+                            className={`w-5 h-5 ${
+                              isActive
+                                ? "drop-shadow-[0_0_8px_rgba(0,255,128,0.8)]"
+                                : ""
+                            }`}
+                          />
+                          <span>{item.name}</span>
+                        </Link>
+                      </li>
+                    );
+                  })
+              )}
             </>
           )}
         </ul>

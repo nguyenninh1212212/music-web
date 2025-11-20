@@ -58,6 +58,12 @@ export interface IUserForm {
     artistId: string;
     token: string;
     walletAddress?: string;
+    avatar: string;
+    email: string;
+    subscription?: {
+      name?: string;
+      expiredAt?: string;
+    }[];
   };
 }
 
