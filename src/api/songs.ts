@@ -2,8 +2,9 @@ import { ICreateSong } from "@/lib/types";
 import api from "./axios";
 
 const songApi = {
-  getSongs: async (params = { page: 1, size: 10 }) =>
+  getSongs: async (params = { page: 1, size: 30 }) =>
     (await api.get("/songs", { params })).data,
+  getSongsTrash: async () => (await api.get("/songs/trash")).data,
 
   // SỬA ĐỔI: Thêm .data để hàm này trả về đúng dữ liệu bài hát
   getSongById: async (id?: string) => (await api.get(`/songs/${id}`)).data,

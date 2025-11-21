@@ -14,6 +14,9 @@ import { Slider } from "../components/ui/slider";
 import { useQuery } from "@tanstack/react-query";
 import songApi from "@/api/songs";
 import Loading from "@/components/Loading";
+import { useSong } from "@/lib/hook/useSong";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import SongComments from "@/components/comment";
 
 interface SongType {
   id: string;
@@ -54,7 +57,10 @@ export const MusicDetail: React.FC = () => {
   const [currentAudioSrc, setCurrentAudioSrc] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
+  const { playSong } = useMusicPlayer();
+  useEffect(() => {
+    playSong(null); // <--- TẮT MINI PLAYER
+  }, [id]);
   const { data: song, isLoading } = useQuery<SongType>({
     queryKey: ["song", currentSongId],
     queryFn: () =>
@@ -169,16 +175,13 @@ export const MusicDetail: React.FC = () => {
               >
                 {song.artist.stageName}
               </button>
-              <p className="text-gray-400">{song.album.title}</p>
+              <p className="text-gray-400">{song.album?.title}</p>
             </div>
           </div>
 
           {/* Lyrics */}
           <div className="flex flex-col">
-            <h2 className="text-white mb-6">Lyrics</h2>
-            <div className="bg-gray-900/30 rounded-2xl p-8 border border-gray-800 flex-1 overflow-y-auto max-h-[600px]">
-              <div className="space-y-4">{/* Render lyrics */}</div>
-            </div>
+            <SongComments songId={id || ""} />
           </div>
         </div>
 

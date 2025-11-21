@@ -1,27 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  Upload,
-  Edit,
-  Plus,
-  ExternalLink,
-  Eye,
-  Trash2,
-  Music as MusicIcon,
-  TrendingUp,
-  Users,
-  Headphones,
-  Disc,
-  Play,
-  Clock,
-  Loader2,
-} from "lucide-react";
+import { Upload, Edit, Plus, Eye, Trash2, Users, Loader2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -29,56 +12,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "../../components/ui/table";
 import { Card, CardContent } from "../../components/ui/card";
 // SỬA: Import đúng types từ file types.ts
-import {
-  IArtist,
-  ArtistSong,
-  ArtistAlbum,
-  ICreateSong,
-  ICreateAlbum,
-  IArtistCreate,
-  ISongSummary,
-  IAlbumSummary,
-} from "../../lib/types";
+import { IArtist, ISongSummary, IAlbumSummary } from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import artistApi from "@/api/artist";
 import { toast } from "sonner";
-import songApi from "@/api/songs";
 import albumApi from "@/api/album"; // SỬA: Thêm import albumApi
 import { AlbumCard } from "@/components/AlbumCard";
 import { useSong } from "@/lib/hook/useSong";
-
-const allGenres = [
-  "Electronic",
-  "Ambient",
-  "Synthwave",
-  "Chillwave",
-  "Pop",
-  "Rock",
-  "Hip Hop",
-  "Jazz",
-  "Classical",
-  "R&B",
-  "EDM",
-  "House",
-  "Techno",
-];
+import DialogTrashSongs from "@/components/DialogTrashSongs";
 
 interface ArtistProfile extends IArtist {
   name: string; // IArtist có stageName, nhưng component dùng .name
@@ -115,10 +65,8 @@ export const MyArtistProfile: React.FC = () => {
   const [songCoverFile, setSongCoverFile] = useState<File | null>(null);
   const [albumCoverFile, setAlbumCoverFile] = useState<File | null>(null);
 
-  const { createSong, updateSong, removeSong, restoreSong } = useSong();
+  const { createSong, removeSong } = useSong();
 
-  // SỬA: Lấy dữ liệu profile từ React Query
-  // `profileResponse` sẽ là object từ axios (chứa `data`, `status`...)
   const {
     data: profileResponse,
     isLoading,
@@ -188,39 +136,6 @@ export const MyArtistProfile: React.FC = () => {
     },
   });
 
-  // Mutation để TẠO BÀI HÁT MỚI
-  const createSongMutation = useMutation({
-    mutationFn: (formData: FormData) => songApi.createSong(formData),
-    onSuccess: () => {
-      toast.success("Song created successfully!");
-      queryClient.invalidateQueries({
-        queryKey: ["artist profile", user?.user.artistId],
-      });
-      setIsAddingSong(false);
-      // Reset form
-      setSongForm({ title: "", duration: 0, status: "DRAFT" });
-      setSongFile(null);
-      setSongCoverFile(null);
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create song: ${error.message}`);
-    },
-  });
-
-  // Mutation để XÓA BÀI HÁT
-  const deleteSongMutation = useMutation({
-    mutationFn: (songId: string) => songApi.deleteSongPermanently(songId),
-    onSuccess: () => {
-      toast.success("Song deleted.");
-      queryClient.invalidateQueries({
-        queryKey: ["artist profile", user?.user.artistId],
-      });
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to delete song: ${error.message}`);
-    },
-  });
-
   // Mutation để TẠO ALBUM MỚI
   const createAlbumMutation = useMutation({
     mutationFn: (formData: FormData) => albumApi.createAlbum(formData),
@@ -247,8 +162,6 @@ export const MyArtistProfile: React.FC = () => {
     formData.append("bio", editForm.bio);
     formData.append("youtubeUrl", editForm.youtube);
     formData.append("instagramUrl", editForm.instagram);
-    // (File 'types.ts' không khớp 100% với form,
-    // ta sẽ gửi những gì có thể)
 
     if (avatarFile) {
       formData.append("avatarFile", avatarFile);
@@ -256,8 +169,6 @@ export const MyArtistProfile: React.FC = () => {
     if (bannerFile) {
       formData.append("bannerFile", bannerFile);
     }
-    // Gửi genres dưới dạng JSON string nếu API hỗ trợ
-    // formData.append("genres", JSON.stringify(editForm.genres));
 
     updateProfileMutation.mutate(formData);
   };
@@ -280,7 +191,7 @@ export const MyArtistProfile: React.FC = () => {
     if (
       window.confirm("Are you sure you want to permanently delete this song?")
     ) {
-      deleteSongMutation.mutate(id);
+      removeSong.mutate(id);
     }
   };
 
@@ -296,23 +207,12 @@ export const MyArtistProfile: React.FC = () => {
     createAlbumMutation.mutate(formData);
   };
 
-  const handleGenreToggle = (genre: string) => {
-    setEditForm((prev) => ({
-      ...prev,
-      genres: prev.genres.includes(genre)
-        ? prev.genres.filter((g) => g !== genre)
-        : [...prev.genres, genre],
-    }));
-  };
-
-  // SỬA: Xử lý trạng thái Loading và Error
   if (isLoading) {
     return <div className="p-8 text-white">Loading artist profile...</div>;
   }
 
   // Xử lý không phải artist
   if (!user || !user.user.artistId) {
-    // ... (Giữ nguyên code "Artist Access Required")
   }
 
   // Xử lý lỗi
@@ -338,23 +238,14 @@ export const MyArtistProfile: React.FC = () => {
     );
   }
 
-  // SỬA: Lấy profile, songs, albums từ 'profileResponse.data'
   const profile: ArtistProfile = profileResponse.data.artistJson as any;
-  console.log("🚀 ~ MyArtistProfile ~ profile:", profile);
   const songs: ISongSummary[] = profile.songs || [];
   const albums: IAlbumSummary[] = profile.albums || [];
 
-  // (Helper functions formatNumber, formatDuration giữ nguyên)
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -489,10 +380,6 @@ export const MyArtistProfile: React.FC = () => {
 
       <div className="px-8 py-8 space-y-8">
         {/* Phân tích Section */}
-        <section>{/* ... (Code JSX cho Phân tích giữ nguyên) ... */}</section>
-
-        {/* Artist Info Section */}
-        <section>{/* ... (Code JSX cho Artist Info giữ nguyên) ... */}</section>
 
         {/* Songs Section */}
         <section>
@@ -523,9 +410,7 @@ export const MyArtistProfile: React.FC = () => {
                       placeholder="Enter song title"
                     />
                   </div>
-                  {/* ... (Các trường khác) ... */}
 
-                  {/* SỬA: Input cho Audio File */}
                   <div>
                     <Label>Audio File (MP3) *</Label>
                     <Input
@@ -538,7 +423,6 @@ export const MyArtistProfile: React.FC = () => {
                     />
                   </div>
 
-                  {/* SỬA: Input cho Cover Art */}
                   <div>
                     <Label>Cover Art *</Label>
                     <Input
@@ -617,8 +501,8 @@ export const MyArtistProfile: React.FC = () => {
                               size="sm"
                               onClick={() => handleDeleteSong(song.id)}
                               disabled={
-                                deleteSongMutation.isPending &&
-                                deleteSongMutation.variables === song.id
+                                removeSong.isPending &&
+                                removeSong.variables === song.id
                               }
                               className="bg-red-900/20 hover:bg-red-900/40 text-red-400 h-8 px-3"
                             >
@@ -710,6 +594,9 @@ export const MyArtistProfile: React.FC = () => {
               <AlbumCard album={album} key={album.id} />
             ))}
           </div>
+        </section>
+        <section className="text-white">
+          Bài hát đã xóa: <DialogTrashSongs />
         </section>
       </div>
     </div>

@@ -25,7 +25,7 @@ import { Settings } from "@/pages/Settings";
 import { Subscription } from "@/pages/Subscription";
 import { MusicDetail } from "@/pages/MusicDetail";
 import { MyArtistProfile } from "@/pages/Artist/MyArtistProfile";
-import { Search } from "@/pages/Search";
+import { SearchPage } from "@/pages/SearchPage";
 import { TrendMusic } from "@/pages/TrendMusic";
 import { MainPage } from "@/pages/MainPage";
 import { ArtistDashboard } from "@/pages/NFT/ArtistDashboard";
@@ -39,6 +39,8 @@ import { PaymentSuccess } from "@/pages/payment/PaymentSuccess";
 import { PaymentFailed } from "@/pages/payment/PaymentFailed";
 import { NFTMarketResell } from "./pages/NFT/NFTMarketResell";
 import ArtistRegistrationForm from "@/pages/Artist/ArtistRegistrationForm";
+import AudioSearch from "./components/AudioSearch";
+import { Search } from "./pages/Search";
 
 // Protected Route wrapper
 // const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -71,7 +73,11 @@ function AppRoutes() {
         <Route path="/" element={<AppLayout />}>
           <Route element={<Home />}>
             <Route index element={<MainPage />} />
-            <Route path="search" element={<Search />} />
+            <Route path="/search" element={<SearchPage />}>
+              <Route index element={<Search />} />
+              <Route path="audio" element={<AudioSearch />} />
+            </Route>
+
             <Route path="artists" element={<Artists />} />
             <Route path="albums" element={<Albums />} />
             <Route path="music/trend" element={<TrendMusic />} />

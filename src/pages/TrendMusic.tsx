@@ -8,7 +8,7 @@ export const TrendMusic: React.FC = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["songs"],
     queryFn: () => {
-      return songApi.getSongs({ page: 1, size: 10 });
+      return songApi.getSongs({ page: 1, size: 30 });
     },
   });
   console.log("🚀 ~ TrendMusic ~ data:", data);

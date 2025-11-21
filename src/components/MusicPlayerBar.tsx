@@ -12,6 +12,7 @@ import { Slider } from "./ui/slider";
 import songApi from "@/api/songs";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ISongBar } from "@/lib/types";
+import { useSong } from "@/lib/hook/useSong";
 
 type SongApiResponse = ISongBar & {
   previousSongId: string | null;
@@ -36,6 +37,8 @@ export const MusicPlayerBar: React.FC = () => {
     setProgress,
     playSong,
   } = useMusicPlayer();
+
+  const { removeToFavorite, addToFavorite } = useSong();
 
   const [localProgress, setLocalProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -79,6 +82,10 @@ export const MusicPlayerBar: React.FC = () => {
       audio.pause();
     }
   }, [currentAudioSrc, isPlaying]);
+
+  const [isFavoring, setIsFavoring] = useState(
+    currentSongData?.isFavourite || false
+  );
 
   // 3. useEffect: Xử lý Volume (Không đổi)
   useEffect(() => {
@@ -193,7 +200,20 @@ export const MusicPlayerBar: React.FC = () => {
           </div>
           <button
             disabled={isAdPlaying} // Vô hiệu hóa nút tim khi có ad
-            className="text-gray-400 hover:text-[#00FF80] transition-colors disabled:opacity-30"
+            onClick={
+              isFavoring
+                ? () => {
+                    removeToFavorite.mutate(currentSongId);
+                    setIsFavoring(!isFavoring);
+                  }
+                : () => {
+                    addToFavorite.mutate(currentSongId);
+                    setIsFavoring(!isFavoring);
+                  }
+            }
+            className={`text-gray-400 hover:text-[#00FF80] transition-colors disabled:opacity-30 ${
+              isFavoring ? "text-[#00ff80]" : "text-white"
+            }`}
           >
             <Heart className="w-5 h-5" />
           </button>

@@ -1,9 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import songApi from "@/api/songs";
 import { ICreateSong } from "../types";
 
 export const useSong = () => {
+  const queryClient = useQueryClient();
+
   // CREATE
   const createSong = useMutation({
     mutationFn: async (payload: FormData) => songApi.createSong(payload),
@@ -14,8 +16,27 @@ export const useSong = () => {
       toast.error("Tạo bài hát thất bại!");
     },
   });
+  const addToFavorite = useMutation({
+    mutationFn: async (songId: string) => songApi.addSongToFavorites(songId),
+    onSuccess: () => {
+      toast.success("Tạo bài hát thành công!");
+    },
+    onError: () => {
+      toast.error("Tạo bài hát thất bại!");
+    },
+  });
+  const removeToFavorite = useMutation({
+    mutationFn: async (songId: string) =>
+      songApi.removeSongFromFavorites(songId),
+    onSuccess: () => {
+      toast.success("Tạo bài hát thành công!");
+    },
+    onError: () => {
+      toast.error("Tạo bài hát thất bại!");
+    },
+  });
 
-  createSong
+  createSong;
 
   // UPDATE
   const updateSong = useMutation({
@@ -38,6 +59,12 @@ export const useSong = () => {
   const removeSong = useMutation({
     mutationFn: async (songId: string) => songApi.removeSong(songId),
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["artist profile"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["trash song"],
+      });
       toast.success("Xóa bài hát thành công!");
     },
     onError: () => {
@@ -45,10 +72,15 @@ export const useSong = () => {
     },
   });
 
-  // RESTORE (nếu cần)
   const restoreSong = useMutation({
     mutationFn: async (songId: string) => songApi.restoreSong(songId),
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["artist profile"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["trash song"],
+      });
       toast.success("Khôi phục bài hát thành công!");
     },
     onError: () => {
@@ -61,5 +93,7 @@ export const useSong = () => {
     updateSong,
     removeSong,
     restoreSong,
+    addToFavorite,
+    removeToFavorite,
   };
 };

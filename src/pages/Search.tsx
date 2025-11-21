@@ -16,11 +16,12 @@ import { SongCard } from "../components/SongCard";
 import { ArtistCard } from "../components/ArtistCard";
 import { useQuery } from "@tanstack/react-query";
 import searchApi from "@/api/search";
+import { IArtistCard, ISongCard } from "@/lib/types";
+import AudioSearch from "@/components/AudioSearch";
 
 export const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // --- Fetch dữ liệu ---
   const { data, isLoading, error } = useQuery({
     queryKey: ["search", searchQuery],
     queryFn: () => searchApi.getSearch(searchQuery),
@@ -63,7 +64,6 @@ export const Search: React.FC = () => {
         <p className="text-gray-400">Tìm bài hát yêu thích, nghệ sĩ</p>
       </div>
 
-      {/* Search Bar */}
       <div className="mb-8">
         <div className="relative max-w-2xl">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -118,7 +118,15 @@ const EmptyResultState = () => (
   </div>
 );
 
-const SearchTabs = ({ results, total, query }) => (
+const SearchTabs = ({
+  results,
+  total,
+  query,
+}: {
+  results: any;
+  total: number;
+  query: string;
+}) => (
   <div>
     <div className="mb-6">
       <p className="text-gray-400">
@@ -142,7 +150,9 @@ const SearchTabs = ({ results, total, query }) => (
         {results.songs.length === 0 ? (
           <EmptyTab icon={Music} text="Không thấy bài hát" />
         ) : (
-          results.songs.map((song) => <SongCard key={song.id} song={song} />)
+          results.songs.map((song: ISongCard, i: number) => (
+            <SongCard key={song.id} song={song} index={i} />
+          ))
         )}
       </TabsContent>
 
@@ -152,7 +162,7 @@ const SearchTabs = ({ results, total, query }) => (
           <EmptyTab icon={Mic2} text="Không thấy nghệ sĩ" />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {results.artists.map((artist) => (
+            {results.artists.map((artist: IArtistCard) => (
               <ArtistCard key={artist.id} artist={artist} />
             ))}
           </div>
@@ -162,7 +172,7 @@ const SearchTabs = ({ results, total, query }) => (
   </div>
 );
 
-const EmptyTab = ({ icon: Icon, text }) => (
+const EmptyTab = ({ icon: Icon, text }: { icon: any; text: string }) => (
   <div className="flex flex-col items-center justify-center py-12">
     <Icon className="w-12 h-12 text-gray-600 mb-3" />
     <p className="text-gray-400">{text}</p>

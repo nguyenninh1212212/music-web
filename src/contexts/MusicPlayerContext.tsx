@@ -11,6 +11,11 @@ interface MusicPlayerContextType {
   togglePlay: () => void;
   setVolume: (volume: number) => void;
   setProgress: (progress: number) => void;
+
+  isPlayerOpen: boolean; // <--- thêm
+  togglePlayer: () => void; // <--- thêm
+  openPlayer: () => void; // <--- thêm
+  closePlayer: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(
@@ -32,6 +37,11 @@ interface MusicPlayerProviderProps {
 export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
   children,
 }) => {
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+
+  const togglePlayer = () => setIsPlayerOpen((p) => !p);
+  const openPlayer = () => setIsPlayerOpen(true);
+  const closePlayer = () => setIsPlayerOpen(false);
   const [currentSongId, setCurrentSongId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(70);
@@ -76,7 +86,10 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
         togglePlay,
         setVolume,
         setProgress,
-        // --- Xóa nextSong và previousSong khỏi context ---
+        isPlayerOpen,
+        togglePlayer,
+        openPlayer,
+        closePlayer,
       }}
     >
       {children}
