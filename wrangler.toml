@@ -1,9 +1,6 @@
-name = "music"             # tên project trên Cloudflare
-main = ""                         # không cần main vì là static site
-type = "javascript"               # hoặc "webpack" nếu muốn bundle
-compatibility_date = "2025-11-28" # ngày tương th   ích
+name = "my-app"
+type = "javascript"
+compatibility_date = "2025-11-28"
 
-# Thông tin site (folder chứa assets)
 [site]
-bucket = "./build"                 # thư mục build
-entry-point = "."                 # folder gốc project
+bucket = "./build"   # thư mục build
