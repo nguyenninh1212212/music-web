@@ -24,7 +24,7 @@ import { ethers } from "ethers";
 import { createTicket, getArtistTickets } from "@/api/nft";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ICreateTicket } from "@/lib/types";
-import FactoryABI from "../../../../smart-contract-new/artifacts/contracts/TicketFactory.sol/TicketFactory.json";
+import FactoryABI from "@/abi/TicketFactory.json";
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/util/ipfs";
 import { LocationPicker } from "@/components/LocationPicker";
 import Loading from "@/components/Loading";
