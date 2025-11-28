@@ -1,8 +1,5 @@
-name = "my-react-app"
+name = "music-streaming-app"
 compatibility_date = "2025-11-28"
-
-type = "javascript"
 
 [site]
 bucket = "./build"
-
