@@ -230,7 +230,6 @@ export default function DialogButton({
         sellerId: userAddress,
       });
     } catch (err: any) {
-      console.error("❌ Resell error:", err);
       setIsApproving(false);
 
       let errorMessage = "Không thể bán lại vé";
@@ -259,7 +258,7 @@ export default function DialogButton({
           variant="outline"
           className="flex-1 border-[#00FF80]/30 text-[#00FF80] hover:bg-[#00FF80]/10"
         >
-          Resell
+          Bán lại
         </Button>
       </DialogTrigger>
 

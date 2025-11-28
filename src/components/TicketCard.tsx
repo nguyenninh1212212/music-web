@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { NFTTicket } from "../contexts/DataContext";
 import { Calendar, MapPin, Coins } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -12,6 +11,8 @@ interface TicketCardProps {
 }
 
 export const TicketCard = ({ ticket }: TicketCardProps) => {
+  console.log(ipfsToHttp(ticket?.coverImage));
+
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <>
@@ -27,7 +28,7 @@ export const TicketCard = ({ ticket }: TicketCardProps) => {
           />
           {ticket.status == "active" && (
             <Badge className="absolute top-3 right-3 bg-yellow-500/90 text-black border-0">
-              Resale
+              Bán Lại
             </Badge>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -49,7 +50,7 @@ export const TicketCard = ({ ticket }: TicketCardProps) => {
             <div className="flex items-center gap-2 text-gray-400">
               <Calendar size={14} className="text-[#00FF80]" />
               <span>
-                {new Date(ticket.date).toLocaleDateString("en-US", {
+                {new Date(ticket.date).toLocaleDateString("vi-VN", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -70,7 +71,7 @@ export const TicketCard = ({ ticket }: TicketCardProps) => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[0.75rem] text-gray-400">Remaining</p>
+              <p className="text-[0.75rem] text-gray-400">Còn Lại</p>
               <p className="text-white">
                 {ticket.mintedCount}/{ticket.maxSupply}
               </p>
@@ -86,7 +87,7 @@ export const TicketCard = ({ ticket }: TicketCardProps) => {
               disabled={ticket.maxSupply - ticket.mintedCount === 0}
               className="flex-1 bg-[#00FF80] text-black hover:bg-[#00FF80]/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {ticket.maxSupply === 0 ? "Sold Out" : "Buy Ticket"}
+              {ticket.maxSupply === 0 ? "Hết Vé" : "Mua Vé"}
             </Button>
             <Button
               onClick={(e) => {
@@ -96,7 +97,7 @@ export const TicketCard = ({ ticket }: TicketCardProps) => {
               variant="outline"
               className="border-[#00FF80]/30 text-[#00FF80] hover:bg-[#00FF80]/10"
             >
-              Details
+              Chi Tiết
             </Button>
           </div>
         </div>

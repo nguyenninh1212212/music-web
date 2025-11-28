@@ -46,7 +46,7 @@ export async function uploadFileToIPFS(file: File): Promise<IPFSUploadResult> {
 
   return {
     cid: ipfsHash,
-    ipfsUrl: `ipfs://${ipfsHash}`,
+    ipfsUrl: `ipfs//:${ipfsHash}`,
     gatewayUrl: `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
   };
 }
@@ -146,7 +146,7 @@ export async function fetchJSONFromIPFS(cidOrUrl: string): Promise<any> {
 
     console.log("📥 Fetching JSON from IPFS:", url);
 
-    const  data  = await axios.get(
+    const data = await axios.get(
       "https://maroon-important-aphid-390.mypinata.cloud/ipfs/QmdL8QJ9w8d6LYZwi1tno64a4DToP62gRadM98RMd8qC2i",
       {
         headers: { Accept: "application/json" },

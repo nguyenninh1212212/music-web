@@ -38,5 +38,5 @@ export const formatDate = (isoString: string) => {
 
 export const ipfsToHttp = (url: string) => {
   if (!url) return "";
-  return url.replace("ipfs://", "https://ipfs.io/ipfs/");
+  return url.replace("ipfs//:", "https://ipfs.io/ipfs/");
 };

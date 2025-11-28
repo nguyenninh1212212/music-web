@@ -9,6 +9,8 @@ const searchApi = {
         "Content-Type": "multipart/form-data",
       },
     }),
+  getAutocomplete: async (q: string) =>
+    (await api.get("/search/autocomplete", { params: { q } })).data,
 };
 
 export default searchApi;

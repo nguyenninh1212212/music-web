@@ -77,16 +77,19 @@ export const getResellTickets = async (page?: number, limit?: number) => {
   const res = await api.get("/nfts/resell", {
     params: { page, limit },
   });
-  console.log("🚀 ~ getResellTickets ~ res:", res.data);
   return res.data;
 };
-
+export const getArtistTickets = async (page?: number, limit?: number) => {
+  const res = await api.get("/nfts/artist-ticket", {
+    params: { page, limit },
+  });
+  return res.data;
+};
 // ================================
 // 2️⃣ List ticket for resale
 // ================================
 export const listResellTicket = async (userTicketId: string, price: string) => {
   const res = await api.post("/nfts/resell", { userTicketId, price });
-  console.log("🚀 ~ listResellTicket ~ res:", res.data);
   return res.data;
 };
 
@@ -95,7 +98,6 @@ export const listResellTicket = async (userTicketId: string, price: string) => {
 // ================================
 export const buyResellTicket = async (resellTicketId: string) => {
   const res = await api.post("/nfts/resell/buy", { resellTicketId });
-  console.log("🚀 ~ buyResellTicket ~ res:", res.data);
   return res.data;
 };
 
@@ -104,7 +106,6 @@ export const buyResellTicket = async (resellTicketId: string) => {
 // ================================
 export const updateResellTicketClient = async (resellId: string) => {
   const res = await api.patch(`/nfts/resell/${resellId}`);
-  console.log("🚀 ~ updateResellTicketClient ~ res:", res.data);
   return res.data;
 };
 
@@ -118,6 +119,5 @@ export const updateTicketStatusClient = async (
   const res = await api.post(`/nfts/update-status/${ticketId}`, null, {
     params: { status },
   });
-  console.log("🚀 ~ updateTicketStatusClient ~ res:", res.data);
   return res.data;
 };

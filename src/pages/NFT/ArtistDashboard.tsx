@@ -21,16 +21,27 @@ import {
 import { Upload, TrendingUp, Ticket, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { ethers } from "ethers";
-import { createTicket } from "@/api/nft";
-import { useMutation } from "@tanstack/react-query";
+import { createTicket, getArtistTickets } from "@/api/nft";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ICreateTicket } from "@/lib/types";
 import FactoryABI from "../../../../smart-contract-new/artifacts/contracts/TicketFactory.sol/TicketFactory.json";
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/util/ipfs";
 import { LocationPicker } from "@/components/LocationPicker";
+import Loading from "@/components/Loading";
+import { Error404 } from "./error/Error404";
 
 export const ArtistDashboard = () => {
   const navigate = useNavigate();
   const { user, isArtist } = useAuth();
+  const {
+    data: artistTickets,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["artist-tickets"],
+    queryFn: () => getArtistTickets(1, 20),
+    enabled: !!user && isArtist,
+  });
 
   const [formData, setFormData] = useState<ICreateTicket>({
     coverFile: null,
@@ -112,6 +123,8 @@ export const ArtistDashboard = () => {
     },
   });
 
+  if (isLoading) return <Loading />;
+  if (error) return <Error404 />;
   const handleCreateTicket = async () => {
     if (isCreating) return;
 
@@ -136,7 +149,7 @@ export const ArtistDashboard = () => {
 
       // 2. Upload image to IPFS
       toast.info("Uploading image to IPFS...");
-      // const imageResult = await uploadFileToIPFS(formData.coverFile);
+      const imageResult = await uploadFileToIPFS(formData.coverFile);
 
       // 3. Create and upload metadata to IPFS
       toast.info("Uploading metadata to IPFS...");
@@ -175,10 +188,6 @@ export const ArtistDashboard = () => {
       if (network.chainId !== 31337n) {
         return toast.error("Please switch MetaMask to Hardhat (chainId 31337)");
       }
-      console.log(
-        "🚀 ~ handleCreateTicket ~ factoryContract:",
-        factoryContract
-      );
 
       const _price = ethers.parseUnits(formData.price, "ether");
       const _maxSupply = parseInt(formData.maxSupply);
@@ -279,7 +288,7 @@ export const ArtistDashboard = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-2xl bg-gradient-to-br from-[#00FF80]/20 to-[#00FF80]/5 border border-[#00FF80]/30">
             <div className="flex items-center gap-3 mb-2">
               <Ticket className="text-[#00FF80]" size={24} />
@@ -303,7 +312,7 @@ export const ArtistDashboard = () => {
             </div>
             <p className="text-white text-[2rem]">0 ETH</p>
           </div>
-        </div>
+        </div> */}
 
         <Tabs defaultValue="events" className="space-y-6">
           <TabsList className="bg-white/5 border border-[#00FF80]/20">
@@ -330,20 +339,31 @@ export const ArtistDashboard = () => {
                     <TableHead className="text-[#00FF80]">Event</TableHead>
                     <TableHead className="text-[#00FF80]">Date</TableHead>
                     <TableHead className="text-[#00FF80]">Price</TableHead>
-                    <TableHead className="text-[#00FF80]">Sold</TableHead>
-                    <TableHead className="text-[#00FF80]">Remaining</TableHead>
-                    <TableHead className="text-[#00FF80]">Earnings</TableHead>
+                    <TableHead className="text-[#00FF80]">Địa điểm</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center text-gray-400 py-8"
-                    >
-                      No events yet. Create your first ticket!
-                    </TableCell>
-                  </TableRow>
+                  {artistTickets?.tickets?.length ? (
+                    artistTickets.tickets.map((ticket: any) => (
+                      <TableRow key={ticket.eventId}>
+                        <TableCell>{ticket.title || "Unnamed Event"}</TableCell>
+                        <TableCell>
+                          {new Date(ticket.date).toLocaleString()}
+                        </TableCell>
+                        <TableCell>{ticket.price} ETH</TableCell>
+                        <TableCell>{ticket.location || ""}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center text-gray-400 py-8"
+                      >
+                        No events yet. Create your first ticket!
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

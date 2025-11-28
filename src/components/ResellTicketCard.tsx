@@ -212,7 +212,7 @@ export const ResellTicketCard = ({
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
           <Badge className="absolute top-3 right-3 bg-green-500/90 text-black border-0 font-semibold">
-            🔄 Resell
+            🔄 Bán lại
           </Badge>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         </div>
@@ -255,10 +255,10 @@ export const ResellTicketCard = ({
                 </span>
               </div>
               <p className="text-xs text-gray-400">
-                Original: {ticket.event.price} ETH
+                Giá gốc: {ticket.event.price} ETH
               </p>
               <p className="text-xs text-gray-400">
-                Seller: {ticket.sellerId.slice(0, 6)}...
+                Người bán lại: {ticket.sellerId.slice(0, 6)}...
                 {ticket.sellerId.slice(-4)}
               </p>
             </div>

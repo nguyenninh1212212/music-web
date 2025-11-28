@@ -95,8 +95,8 @@ export const ResellTicket = () => {
 
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 text-center">
-            <h1 className="text-white mb-2">💱 Resell NFT Ticket</h1>
-            <p className="text-gray-400">List your ticket on the marketplace</p>
+            <h1 className="text-white mb-2">💱 Bán lại vé</h1>
+            <p className="text-gray-400">Bán lại vé của bạn trong chợ </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -135,9 +135,7 @@ export const ResellTicket = () => {
                 </div>
 
                 <div className="pt-4 border-t border-[#00FF80]/20">
-                  <p className="text-gray-400 text-[0.875rem] mb-1">
-                    Original Purchase Price
-                  </p>
+                  <p className="text-gray-400 text-[0.875rem] mb-1">Giá gốc</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-white text-[1.5rem]">
                       {ticket.priceETH} ETH
@@ -151,12 +149,12 @@ export const ResellTicket = () => {
             {/* Right: Resale Form */}
             <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-                <h3 className="text-white mb-4">Set Resale Price</h3>
+                <h3 className="text-white mb-4">Hãy chọn giá đúng</h3>
 
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="price" className="text-gray-300">
-                      New Price (ETH)
+                      Giá mới (ETH)
                     </Label>
                     <div className="relative mt-2">
                       <DollarSign
@@ -181,28 +179,30 @@ export const ResellTicket = () => {
                   </div>
 
                   <div className="p-4 rounded-lg bg-[#00FF80]/10 border border-[#00FF80]/30">
-                    <h4 className="text-[#00FF80] text-[0.875rem] mb-2">
-                      Pricing Tips
-                    </h4>
+                    <h5 className="text-[#00FF80] text-[0.875rem] mb-2">
+                      Mẹo Định Giá
+                    </h5>
                     <ul className="text-gray-300 text-[0.875rem] space-y-1 list-disc list-inside">
-                      <li>Consider current market demand</li>
-                      <li>Factor in original purchase price</li>
-                      <li>Check similar event listings</li>
-                      <li>Be competitive but fair</li>
+                      <li>Xem xét nhu cầu thị trường hiện tại</li>
+                      <li>Tính đến giá mua ban đầu</li>
+                      <li>Kiểm tra các sự kiện tương tự</li>
+                      <li>Cạnh tranh nhưng công bằng</li>
                     </ul>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-                <h4 className="text-white mb-3">Important Information</h4>
+              <div className="p-5 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
+                <h5 className="text-white mb-3">Thông Tin Quan Trọng</h5>
                 <div className="space-y-2 text-[0.875rem] text-gray-400">
                   <p>
-                    • Once listed, your ticket will appear on the marketplace
+                    • Khi đã đăng bán, vé của bạn sẽ xuất hiện trên thị trường
                   </p>
-                  <p>• You won't be able to use the ticket after listing</p>
-                  <p>• The sale will be executed via smart contract</p>
-                  <p>• You'll receive payment in ETH to your wallet</p>
+                  <p>• Bạn sẽ không thể sử dụng vé sau khi đã đăng bán</p>
+                  <p>
+                    • Việc bán sẽ được thực hiện thông qua hợp đồng thông minh
+                  </p>
+                  <p>• Bạn sẽ nhận thanh toán bằng ETH vào ví của mình</p>
                 </div>
               </div>
 

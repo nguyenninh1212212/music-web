@@ -48,7 +48,7 @@ export const PurchaseDialog = ({
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-6 pt-4">
-          {/* Image */}
+          {/* Hình ảnh */}
           <div className="relative rounded-2xl overflow-hidden group">
             <img
               src={ipfsToHttp(ticket.coverImage)}
@@ -63,24 +63,27 @@ export const PurchaseDialog = ({
             />
             {ticket.status === "active" && (
               <Badge className="absolute top-4 right-4 bg-yellow-500 text-black">
-                Resale
+                Bán Lại
               </Badge>
             )}
           </div>
 
-          {/* Info */}
+          {/* Thông tin */}
           <div className="space-y-4">
             <p className="text-[#00FF80] text-[1.125rem]">
-              by {ticket.artistId}
+              bởi{" "}
+              {ticket.artistId === user?.user.artistId
+                ? "Bạn"
+                : ticket.artistId}
             </p>
 
             <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20 space-y-3">
               <div className="flex items-start gap-3">
                 <Calendar className="text-[#00FF80] mt-1" size={18} />
                 <div>
-                  <p className="text-gray-400 text-[0.875rem]">Date</p>
+                  <p className="text-gray-400 text-[0.875rem]">Ngày</p>
                   <p className="text-white text-[0.9375rem]">
-                    {new Date(ticket.date).toLocaleDateString("en-US", {
+                    {new Date(ticket.date).toLocaleDateString("vi-VN", {
                       weekday: "long",
                       year: "numeric",
                       month: "long",
@@ -93,9 +96,7 @@ export const PurchaseDialog = ({
               <div className="flex items-start gap-3">
                 <MapPin className="text-[#00FF80] mt-1" size={18} />
                 <div>
-                  <p className="text-gray-400 text-[0.875rem]">
-                    {ticket.location}
-                  </p>
+                  <p className="text-gray-400 text-[0.875rem]">Địa điểm</p>
                   <p className="text-white text-[0.9375rem]">
                     {ticket.location}
                   </p>
@@ -106,7 +107,7 @@ export const PurchaseDialog = ({
                 <FileText className="text-[#00FF80] mt-1" size={18} />
                 <div>
                   <p className="text-gray-400 text-[0.875rem]">
-                    Smart Contract
+                    Hợp đồng thông minh
                   </p>
                   <p className="text-white font-mono text-[0.875rem] break-words">
                     {ticket.contractAddress}
@@ -115,15 +116,15 @@ export const PurchaseDialog = ({
               </div>
             </div>
 
-            {/* Purchase / QR Code */}
+            {/* Mua vé / QR Code */}
             {existingPurchase ? (
               <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/30 text-center space-y-3">
-                <p className="text-[#00FF80]">✅ Ticket Purchased!</p>
+                <p className="text-[#00FF80]">✅ Vé đã được mua!</p>
                 <div className="bg-white p-4 rounded-lg inline-block">
                   <QRCodeSVG value={existingPurchase.qrCode} size={180} />
                 </div>
                 <p className="text-gray-400 text-[0.875rem]">
-                  Scan this QR code at the venue
+                  Quét mã QR này tại sự kiện
                 </p>
                 <div className="flex gap-3">
                   <Button
@@ -131,13 +132,13 @@ export const PurchaseDialog = ({
                     variant="outline"
                     className="flex-1 border-[#00FF80]/30 text-[#00FF80] hover:bg-[#00FF80]/10"
                   >
-                    Verify Ticket
+                    Xác Thực Vé
                   </Button>
                   <Button
                     onClick={handleClose}
                     className="flex-1 bg-[#00FF80] text-black hover:bg-[#00FF80]/90"
                   >
-                    Close
+                    Đóng
                   </Button>
                 </div>
               </div>

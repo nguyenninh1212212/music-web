@@ -50,7 +50,7 @@ export const ResellDialog = ({
       <DialogContent className="bg-[#0A0A0A] border-[#00FF80]/30 max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white text-[1.5rem]">
-            💱 Resell NFT Ticket
+            💱 Bán lại vé nft
           </DialogTitle>
         </DialogHeader>
 
@@ -90,9 +90,7 @@ export const ResellDialog = ({
               </div>
 
               <div className="pt-4 border-t border-[#00FF80]/20">
-                <p className="text-gray-400 text-[0.875rem] mb-1">
-                  Original Purchase Price
-                </p>
+                <p className="text-gray-400 text-[0.875rem] mb-1">Giá gốc</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-white text-[1.375rem]">
                     {ticket.priceETH} ETH
@@ -111,7 +109,7 @@ export const ResellDialog = ({
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="price" className="text-gray-300">
-                    New Price (ETH)
+                    Giá mới (ETH)
                   </Label>
                   <div className="relative mt-2">
                     <DollarSign
@@ -137,25 +135,29 @@ export const ResellDialog = ({
 
                 <div className="p-4 rounded-lg bg-[#00FF80]/10 border border-[#00FF80]/30">
                   <h5 className="text-[#00FF80] text-[0.875rem] mb-2">
-                    Pricing Tips
+                    Mẹo Định Giá
                   </h5>
                   <ul className="text-gray-300 text-[0.875rem] space-y-1 list-disc list-inside">
-                    <li>Consider current market demand</li>
-                    <li>Factor in original purchase price</li>
-                    <li>Check similar event listings</li>
-                    <li>Be competitive but fair</li>
+                    <li>Xem xét nhu cầu thị trường hiện tại</li>
+                    <li>Tính đến giá mua ban đầu</li>
+                    <li>Kiểm tra các sự kiện tương tự</li>
+                    <li>Cạnh tranh nhưng công bằng</li>
                   </ul>
                 </div>
               </div>
             </div>
 
             <div className="p-5 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-              <h5 className="text-white mb-3">Important Information</h5>
+              <h5 className="text-white mb-3">Thông Tin Quan Trọng</h5>
               <div className="space-y-2 text-[0.875rem] text-gray-400">
-                <p>• Once listed, your ticket will appear on the marketplace</p>
-                <p>• You won't be able to use the ticket after listing</p>
-                <p>• The sale will be executed via smart contract</p>
-                <p>• You'll receive payment in ETH to your wallet</p>
+                <p>
+                  • Khi đã đăng bán, vé của bạn sẽ xuất hiện trên thị trường
+                </p>
+                <p>• Bạn sẽ không thể sử dụng vé sau khi đã đăng bán</p>
+                <p>
+                  • Việc bán sẽ được thực hiện thông qua hợp đồng thông minh
+                </p>
+                <p>• Bạn sẽ nhận thanh toán bằng ETH vào ví của mình</p>
               </div>
             </div>
 
@@ -164,7 +166,7 @@ export const ResellDialog = ({
               disabled={!newPrice || parseFloat(newPrice) <= 0}
               className="w-full bg-[#00FF80] text-black hover:bg-[#00FF80]/90 shadow-[0_0_20px_rgba(0,255,128,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              List Ticket for Resale
+              Bán lại vé này
             </Button>
           </div>
         </div>

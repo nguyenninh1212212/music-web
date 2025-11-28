@@ -65,23 +65,21 @@ export const MyTickets = () => {
     <div className="min-h-screen bg-[#0A0A0A]">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-white mb-2">🛒 My NFT Tickets</h1>
+          <h1 className="text-white mb-2">🛒 Vé của tôi</h1>
           <p className="text-gray-400">
             {userTickets.length}{" "}
-            {userTickets.length === 1 ? "ticket" : "tickets"} in your wallet
+            {userTickets.length === 1 ? "ticket" : "tickets"} trong ví bạn
           </p>
         </div>
 
         {userTickets.length === 0 ? (
           <div className="text-center py-16 rounded-2xl bg-white/5 backdrop-blur-lg border border-[#00FF80]/20">
-            <p className="text-gray-400 mb-4">
-              You haven't purchased any tickets yet
-            </p>
+            <p className="text-gray-400 mb-4">Bạn chưa mua vé nào</p>
             <Button
               onClick={() => navigate("/nft")}
               className="bg-[#00FF80] text-black hover:bg-[#00FF80]/90"
             >
-              Browse Marketplace
+              Đến chợ
             </Button>
           </div>
         ) : (
@@ -132,7 +130,7 @@ export const MyTickets = () => {
                       <DialogTrigger asChild>
                         <Button className="flex-1 bg-[#00FF80] text-black hover:bg-[#00FF80]/90">
                           <QrCode size={16} className="mr-2" />
-                          View QR
+                          Xem QR
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="bg-[#0A0A0A] border-[#00FF80]/30 max-w-md">
@@ -150,7 +148,7 @@ export const MyTickets = () => {
                           </div>
                           <div className="text-center space-y-2">
                             <p className="text-gray-400 text-[0.875rem]">
-                              Scan this code at the venue entrance
+                              Quét mã
                             </p>
                             <p className="text-[#00FF80] text-[0.875rem] font-mono">
                               {ticket.event.baseUri}
@@ -163,7 +161,7 @@ export const MyTickets = () => {
                             variant="outline"
                             className="w-full border-[#00FF80]/30 text-[#00FF80]"
                           >
-                            Verify This Ticket
+                            Xác minh
                           </Button>
                         </div>
                       </DialogContent>
@@ -184,7 +182,7 @@ export const MyTickets = () => {
                   </div>
 
                   <div className="pt-3 border-t border-[#00FF80]/20 text-[0.75rem] text-gray-400">
-                    Purchased:{" "}
+                    Mua vào ngày:{" "}
                     {new Date(ticket.event.createdAt).toLocaleDateString()}
                   </div>
                 </div>
