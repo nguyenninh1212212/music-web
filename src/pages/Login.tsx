@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -9,17 +9,12 @@ import { ILoginForm } from "@/lib/types";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 export const Login: React.FC = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState<ILoginForm>({ username: "", password: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login(form);
-  };
-
-  const handleGoogleLogin = () => {
-    navigate("/");
   };
 
   console.log("Gooogle client" + import.meta.env.VITE_GOOGLE_CLIENT_ID);
@@ -33,7 +28,10 @@ export const Login: React.FC = () => {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <Link
+            to={"/"}
+            className="flex items-center justify-center gap-2 mb-4"
+          >
             <Music className="w-12 h-12 text-[#00FF80] drop-shadow-[0_0_15px_rgba(0,255,128,0.8)]" />
             <span
               className="text-3xl text-white"
@@ -41,9 +39,7 @@ export const Login: React.FC = () => {
             >
               MusicStream
             </span>
-          </div>
-          <h1 className="text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Log in to continue your music journey</p>
+          </Link>
         </div>
 
         <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800 shadow-2xl">
@@ -82,9 +78,17 @@ export const Login: React.FC = () => {
               type="submit"
               className="w-full bg-[#00FF80] hover:bg-[#00FF80]/80 text-black shadow-[0_0_20px_rgba(0,255,128,0.5)] hover:shadow-[0_0_30px_rgba(0,255,128,0.7)] transition-all duration-300"
             >
-              Log In
+              Đăng nhập
             </Button>
           </form>
+          <div className="relative flex justify-end text-sm">
+            <Link
+              to={"/change-password"}
+              className="px-2  text-gray-400 mb-1 mt-1"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
@@ -92,8 +96,8 @@ export const Login: React.FC = () => {
                 <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-900/50 text-gray-400">
-                  Or continue with
+                <span className="px-2 bg-gray-900/50 text-gray-400 mb-1">
+                  hay đăng nhập bằng
                 </span>
               </div>
             </div>
@@ -104,9 +108,9 @@ export const Login: React.FC = () => {
           </div>
 
           <p className="text-center text-gray-400 mt-6">
-            Don't have an account?{" "}
+            Không có tài khoản
             <Link to="/register" className="text-[#00FF80] hover:underline">
-              Sign up
+              Đăng ký ngay
             </Link>
           </p>
         </div>

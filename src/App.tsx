@@ -22,6 +22,7 @@ import { Artists } from "@/pages/Artists";
 import { ArtistDetail } from "@/pages/Artist/ArtistDetail";
 import { Favourites } from "@/pages/Favourites";
 import { Settings } from "@/pages/Settings";
+import { ChangePassword } from "@/pages/ChangePassword";
 import { Subscription } from "@/pages/Subscription";
 import { MusicDetail } from "@/pages/MusicDetail";
 import { MyArtistProfile } from "@/pages/Artist/MyArtistProfile";
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<AppLayout />}>
           <Route element={<Home />}>
