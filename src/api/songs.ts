@@ -6,6 +6,9 @@ const songApi = {
     await api.get("/songs", { params }),
   getSongsTrash: async () => (await api.get("/songs/trash")).data,
 
+  getRecommendSongs: async (songId: string) => {
+    return (await api.get(`/songs/recommend/${songId}`)).data;
+  },
   // SỬA ĐỔI: Thêm .data để hàm này trả về đúng dữ liệu bài hát
   getSongById: async (id?: string) => (await api.get(`/songs/${id}`)).data,
 

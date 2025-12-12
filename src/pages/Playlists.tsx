@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@radix-ui/react-dialog"; // Đảm bảo import Dialog từ đây
 import { Button } from "@/components/ui/button";
-import { Music, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { Table as TableIcon, Eraser } from "lucide-react";
+import { Table as TableIcon, Eraser, Trash } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Table, TableBody, TableRow, TableCell } from "./ui/table";
@@ -15,7 +15,7 @@ import { ISongCard } from "@/lib/types";
 
 export default function DialogTrashSongs() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { restoreSong } = useSong();
+  const { restoreSong, deleteSong } = useSong();
   const { data, isLoading, error } = useQuery({
     queryKey: ["trash song"],
     queryFn: async () => {
@@ -59,7 +59,7 @@ export default function DialogTrashSongs() {
                           <p className="text-center">{song.title}</p>
                         </div>
 
-                        <div>
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             onClick={() => restoreSong.mutate(song.id)}
@@ -67,9 +67,20 @@ export default function DialogTrashSongs() {
                               restoreSong.isPending &&
                               restoreSong.variables === song.id
                             }
-                            className="bg-red-900/20 hover:bg-red-900/40 text-green-400 h-8 px-3"
+                            className="bg-red-green/20 hover:bg-green-900/40 text-green-400 h-8 px-3"
                           >
                             <Eraser className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => deleteSong.mutate(song.id)}
+                            disabled={
+                              deleteSong.isPending &&
+                              deleteSong.variables === song.id
+                            }
+                            className="bg-red-900/20 hover:bg-red-900/40 text-red-400 h-8 px-3"
+                          >
+                            <Trash className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>

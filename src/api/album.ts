@@ -2,7 +2,7 @@ import api from "./axios";
 
 const albumApi = {
   getAlbums: async (params = { page: 1, size: 10 }) => {
-    return (await api.get("/albums", { params })).data;
+    return await api.get("/albums", { params });
   },
 
   getAlbumById: async (id: string) => {

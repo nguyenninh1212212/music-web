@@ -16,6 +16,15 @@ export const useSong = () => {
       toast.error("Tạo bài hát thất bại!");
     },
   });
+  const deleteSong = useMutation({
+    mutationFn: async (songId: string) => songApi.deleteSongPermanently(songId),
+    onSuccess: () => {
+      toast.success("Xóa bài hát thành công!");
+    },
+    onError: () => {
+      toast.error("Xóa bài hát thất bại!");
+    },
+  });
   const addToFavorite = useMutation({
     mutationFn: async (songId: string) => songApi.addSongToFavorites(songId),
     onSuccess: () => {
@@ -95,5 +104,6 @@ export const useSong = () => {
     restoreSong,
     addToFavorite,
     removeToFavorite,
+    deleteSong,
   };
 };

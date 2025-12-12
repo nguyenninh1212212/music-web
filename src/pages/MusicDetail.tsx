@@ -69,6 +69,14 @@ export const MusicDetail: React.FC = () => {
         : Promise.resolve(null),
     enabled: !!currentSongId,
   });
+  const { data: songRecommend } = useQuery<any>({
+    queryKey: ["songRecommend", currentSongId],
+    queryFn: () =>
+      currentSongId
+        ? songApi.getRecommendSongs(currentSongId)
+        : Promise.resolve(null),
+    enabled: !!currentSongId,
+  });
 
   // Khi song load xong
   useEffect(() => {
@@ -147,6 +155,10 @@ export const MusicDetail: React.FC = () => {
 
   const duration = audioRef.current?.duration || song.duration || 0;
 
+  console.log(
+    "🚀 ~ MusicDetail ~  songRecommend.items[0].songId:",
+    songRecommend.items[0].songId
+  );
   return (
     <div className="min-h-screen pb-32 relative overflow-hidden">
       <audio ref={audioRef} preload="auto" />
@@ -231,16 +243,25 @@ export const MusicDetail: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() =>
-                currentSongId &&
-                song.nextSongId &&
-                setCurrentSongId(song.nextSongId)
+              onClick={() => {
+                if (isAdPlaying) return;
+
+                const nextId =
+                  songRecommend?.items?.length > 0
+                    ? songRecommend.items[0].songId
+                    : song.nextSongId;
+
+                if (nextId) setCurrentSongId(nextId);
+              }}
+              disabled={
+                isAdPlaying ||
+                (!(songRecommend?.items?.length > 0) && !song.nextSongId)
               }
-              disabled={!song.nextSongId || isAdPlaying}
               className="text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <SkipForward className="w-5 h-5" />
             </button>
+
             <button
               onClick={() => setIsRepeat(!isRepeat)}
               className={

@@ -53,7 +53,7 @@ interface UseQueryPaginationResult<T> {
 /**
  * Custom hook để xử lý logic phân trang và gọi API bằng React Query.
  */
-export function useQueryPagination<T extends SongItem>(
+export function useQueryPagination<T>(
   queryKey: QueryKey,
   // apiFn phải trả về Promise<ActualApiResponse<T>>
   apiFn: (params: ApiParams) => Promise<ActualApiResponse<T>>,

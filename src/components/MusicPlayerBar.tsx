@@ -60,6 +60,15 @@ export const MusicPlayerBar: React.FC = () => {
     gcTime: Infinity,
   });
 
+  const { data: songRecommend } = useQuery({
+    queryKey: ["songRecommend", currentSongId],
+    queryFn: () =>
+      currentSongId
+        ? songApi.getRecommendSongs(currentSongId)
+        : Promise.resolve(null),
+    enabled: !!currentSongId,
+  });
+
   useEffect(() => {
     if (currentSongData?.song) {
       setIsAdPlaying(false);
@@ -223,7 +232,13 @@ export const MusicPlayerBar: React.FC = () => {
         <div className="flex-1 flex flex-col items-center gap-2">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => playSong(currentSongData.previousSongId)}
+              onClick={() =>
+                playSong(
+                  songRecommend
+                    ? songRecommend.data.items[0].songId
+                    : currentSongData.previousSongId
+                )
+              }
               disabled={!currentSongData.previousSongId || isAdPlaying} // Vô hiệu hóa
               className="text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
@@ -240,8 +255,18 @@ export const MusicPlayerBar: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => playSong(currentSongData.nextSongId)}
-              disabled={!currentSongData.nextSongId || isAdPlaying} // Vô hiệu hóa
+              onClick={() =>
+                playSong(
+                  songRecommend.length > 0
+                    ? songRecommend.items[0].songId
+                    : currentSongData.nextSongId
+                )
+              }
+              disabled={
+                isAdPlaying ||
+                (!(songRecommend?.items?.length > 0) &&
+                  !currentSongData.nextSongId)
+              }
               className="text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <SkipForward className="w-5 h-5" />

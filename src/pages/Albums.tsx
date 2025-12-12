@@ -3,14 +3,27 @@ import { AlbumCard } from "../components/AlbumCard";
 import albumApi from "@/api/album";
 import { useQuery } from "@tanstack/react-query";
 import { IAlbumCard } from "@/lib/types";
+import { useQueryPagination } from "@/components/useQueryPagination";
+import PaginationControls from "@/components/PaginationControls";
 
 export const Albums: React.FC = () => {
-  const { data, isLoading } = useQuery({
-    queryKey: ["albums"],
-    queryFn: () => {
-      return albumApi.getAlbums({ page: 1, size: 10 });
-    },
-  });
+  const fetchAlbums = async (params: { page: number; size: number }) => {
+    return await albumApi.getAlbums(params);
+  };
+
+  const PAGE_SIZE = 10;
+
+  const {
+    data,
+    isLoading,
+    isPreviousData,
+    currentPage,
+    totalPages,
+    totalItems,
+    pageSize,
+    goToNextPage,
+    goToPrevPage,
+  } = useQueryPagination<IAlbumCard>(["albums"], fetchAlbums, PAGE_SIZE);
 
   if (isLoading) return;
   console.log("🚀 ~ Albums ~ data:", data);
@@ -24,10 +37,26 @@ export const Albums: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {data.items.map((album: IAlbumCard) => (
-          <AlbumCard key={album.id} album={album} />
-        ))}
+        {data &&
+          data?.map((album: IAlbumCard) => (
+            <AlbumCard key={album.id} album={album} />
+          ))}
       </div>
+      {totalPages > -1 && (
+        <footer className="w-full mt-auto py-4 px-4 sm:px-6 lg:px-8 bg-gray-900/70 border-t border-gray-700/50">
+          <div className="max-w-screen-2xl mx-auto">
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              isPreviousData={isPreviousData}
+              onPrev={goToPrevPage}
+              onNext={goToNextPage}
+            />
+          </div>
+        </footer>
+      )}
     </div>
   );
 };

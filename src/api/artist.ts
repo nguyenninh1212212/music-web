@@ -10,7 +10,7 @@ const artistApi = {
     }),
 
   getArtists: async (params = { page: 1, size: 10 }) => {
-    return (await api.get("/artists", { params })).data;
+    return await api.get("/artists", { params });
   },
 
   getMyArtistProfile: async () => {
