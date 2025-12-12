@@ -3,7 +3,7 @@ import api from "./axios";
 
 const songApi = {
   getSongs: async (params = { page: 1, size: 30 }) =>
-    (await api.get("/songs", { params })).data,
+    await api.get("/songs", { params }),
   getSongsTrash: async () => (await api.get("/songs/trash")).data,
 
   // SỬA ĐỔI: Thêm .data để hàm này trả về đúng dữ liệu bài hát
@@ -34,6 +34,7 @@ const songApi = {
 
   removeSongFromFavorites: async (songId: string) =>
     await api.delete("/songs/favorite", { params: { songId } }),
+  getHistory: async () => await api.get("/songs/history"),
 };
 
 export default songApi;

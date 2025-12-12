@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import { ILoginForm, IUserForm, User } from "../lib/types";
+import { ILoginForm, IRegisterForm, IUserForm, User } from "../lib/types";
 import { useMutation } from "@tanstack/react-query";
 import userApi from "@/api/auth";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (form: ILoginForm) => void;
   googleLogin: (tokenId: string) => void;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   isArtist: boolean;
@@ -92,6 +92,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
     },
   });
+  const registerMutation = useMutation({
+    mutationFn: async (form: IRegisterForm) => {
+      const res = await userApi.register(form);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.info("Register success");
+      window.location.href = "/login";
+    },
+    onError: (error: any) => {
+      toast.warning(
+        error.response?.data?.message || "Login failed. Please try again."
+      );
+    },
+  });
 
   const login = (form: ILoginForm) => {
     loginMutation.mutate(form);
@@ -101,8 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     googleMutation.mutate(tokenId);
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    console.warn("Register function not implemented yet");
+  const register = async (name: string, username: string, password: string) => {
+    registerMutation.mutateAsync({ name, password, username });
   };
 
   const logout = () => {

@@ -28,19 +28,15 @@ import { MyArtistProfile } from "@/pages/Artist/MyArtistProfile";
 import { SearchPage } from "@/pages/SearchPage";
 import { TrendMusic } from "@/pages/TrendMusic";
 import { MainPage } from "@/pages/MainPage";
-import { ArtistDashboard } from "@/pages/NFT/ArtistDashboard";
-import { DataProvider } from "@/contexts/DataContext";
-import { MyTickets } from "@/pages/NFT/MyTicket";
-import { NFTMarketplace } from "@/pages/NFT/NFTMarketplace";
-import { NFTPage } from "@/pages/NFT/NFTPage";
+
 import ProtectedRoute from "@/pages/protected/ProtectedRouteProps ";
 import { Toaster } from "sonner";
 import { PaymentSuccess } from "@/pages/payment/PaymentSuccess";
 import { PaymentFailed } from "@/pages/payment/PaymentFailed";
-import { NFTMarketResell } from "./pages/NFT/NFTMarketResell";
 import ArtistRegistrationForm from "@/pages/Artist/ArtistRegistrationForm";
 import AudioSearch from "./components/AudioSearch";
 import { Search } from "./pages/Search";
+import { HistoryMusic } from "./pages/History";
 
 // Protected Route wrapper
 // const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -90,6 +86,14 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="history"
+            element={
+              <ProtectedRoute>
+                <HistoryMusic />
+              </ProtectedRoute>
+            }
+          />
           <Route path="playlist/:id" element={<PlaylistDetail />} />
           <Route path="album/:id" element={<AlbumDetail />} />
           <Route path="artist/:id" element={<ArtistDetail />} />
@@ -120,53 +124,6 @@ function AppRoutes() {
           <Route path="music/:id" element={<MusicDetail />} />
           <Route path="my-artist-profile" element={<MyArtistProfile />} />
           <Route path="/artist-register" element={<ArtistRegistrationForm />} />
-
-          <Route
-            path="my-artist-nft"
-            element={
-              <ProtectedRoute>
-                <DataProvider>
-                  <ArtistDashboard />
-                </DataProvider>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="nft"
-            element={
-              <ProtectedRoute>
-                <DataProvider>
-                  <NFTPage />
-                </DataProvider>
-              </ProtectedRoute>
-            }
-          >
-            <Route
-              index
-              element={
-                <ProtectedRoute>
-                  <NFTMarketplace />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="my-ticket"
-              element={
-                <ProtectedRoute>
-                  <MyTickets />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="resell"
-              element={
-                <ProtectedRoute>
-                  <NFTMarketResell />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

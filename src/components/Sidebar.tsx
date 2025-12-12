@@ -6,11 +6,11 @@ import {
   CreditCard,
   Dock,
   Heart,
+  History,
   Home,
   ListMusic,
   Music,
   Settings,
-  Ticket,
   User,
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ const navItems = [
   { name: "Yêu thích", path: "/favourites", icon: Heart },
   { name: "Gói đăng ký", path: "/subscription", icon: CreditCard },
   { name: "Cài đặt", path: "/settings", icon: Settings },
-  { name: "NFT", path: "/nft", icon: Ticket },
+  { name: "Lịch sử nghe", path: "/history", icon: History },
 ];
 
 const navArtist = [
@@ -30,7 +30,6 @@ const navArtist = [
     path: "/artist-register",
     icon: User,
   },
-  { name: "NFT dashboard", path: "/my-artist-NFT", icon: Dock },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -39,7 +38,6 @@ export const Sidebar: React.FC = () => {
   const isArtist = user?.user.artistId;
   const subscriptions = user?.user?.subscription?.map((e) => e) || [];
   const subscriptionArtist = subscriptions.find((e) => e.name === "ARTIST");
-  console.log("🚀 ~ Sidebar ~ subscriptionArtist:", subscriptionArtist);
 
   const loca = location.pathname;
 

@@ -44,7 +44,6 @@ export interface IPasswordData {
 }
 export interface IRegisterForm {
   username: string;
-  email: string;
   password: string;
   name: string;
 }

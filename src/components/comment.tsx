@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Button } from "./ui/button";
 
-// Kết nối socket server
 const socket = io("http://localhost:4000");
 
 export default function SongComments({ songId }: { songId: string }) {

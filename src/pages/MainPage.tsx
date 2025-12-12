@@ -1,17 +1,17 @@
 import React from "react";
 import { ArtistCard } from "../components/ArtistCard";
 import { AudioWaveform } from "lucide-react";
-import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { Link } from "react-router-dom";
 import { getHome } from "../api/home";
 import { useQuery } from "@tanstack/react-query";
 import { IAlbumCard, IArtistCard } from "@/lib/types";
 import { AlbumCard } from "@/components/AlbumCard";
 import Loading from "@/components/Loading";
+import { Error404 } from "./error/Error404";
 
 export const MainPage: React.FC = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["home"],
     queryFn: async () => {
       const res = await getHome();
       return res;
@@ -19,8 +19,7 @@ export const MainPage: React.FC = () => {
   });
   console.log("🚀 ~ MainPage ~ data:", data);
   if (isLoading) return <Loading />;
-  if (error) return;
-  console.log("🚀 ~ MainPage ~ error:", error);
+  if (error || !data) return <Error404 />;
 
   return (
     <div className="p-5 pb-32">

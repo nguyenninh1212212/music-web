@@ -10,7 +10,7 @@ import { useSong } from "@/lib/hook/useSong";
 import { useQuery } from "@tanstack/react-query";
 import songApi from "@/api/songs";
 import Loading from "./Loading";
-import { Error404 } from "@/pages/NFT/error/Error404";
+import { Error404 } from "@/pages/error/Error404";
 import { ISongCard } from "@/lib/types";
 
 export default function DialogTrashSongs() {

@@ -1,22 +1,20 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Music } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Music } from "lucide-react";
 
 export const Register: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-  const { register } = useAuth();
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+    const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await register(name, email, password);
-    navigate('/');
+    await register(name, username, password);
   };
 
   return (
@@ -31,7 +29,12 @@ export const Register: React.FC = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Music className="w-12 h-12 text-[#00FF80] drop-shadow-[0_0_15px_rgba(0,255,128,0.8)]" />
-            <span className="text-3xl text-white" style={{ fontWeight: 'bold' }}>MusicStream</span>
+            <span
+              className="text-3xl text-white"
+              style={{ fontWeight: "bold" }}
+            >
+              MusicStream
+            </span>
           </div>
           <h1 className="text-white mb-2">Create Account</h1>
           <p className="text-gray-400">Start your musical journey today</p>
@@ -40,7 +43,9 @@ export const Register: React.FC = () => {
         <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
+              <Label htmlFor="name" className="text-gray-300">
+                Full Name
+              </Label>
               <Input
                 id="name"
                 type="text"
@@ -53,12 +58,14 @@ export const Register: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <Label htmlFor="username" className="text-gray-300">
+                username
+              </Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="mt-2 bg-gray-800/50 border-gray-700 text-white focus:border-[#00FF80] focus:ring-[#00FF80]/20"
                 placeholder="your@email.com"
                 required
@@ -66,7 +73,9 @@ export const Register: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Label htmlFor="password" className="text-gray-300">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -78,7 +87,7 @@ export const Register: React.FC = () => {
               />
             </div>
 
-            <Button 
+            <Button
               type="submit"
               className="w-full bg-[#00FF80] hover:bg-[#00FF80]/80 text-black shadow-[0_0_20px_rgba(0,255,128,0.5)] hover:shadow-[0_0_30px_rgba(0,255,128,0.7)] transition-all duration-300"
             >
@@ -87,7 +96,7 @@ export const Register: React.FC = () => {
           </form>
 
           <p className="text-center text-gray-400 mt-6">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link to="/login" className="text-[#00FF80] hover:underline">
               Log in
             </Link>

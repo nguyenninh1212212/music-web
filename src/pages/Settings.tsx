@@ -14,7 +14,7 @@ import userApi from "@/api/auth";
 import { toast } from "sonner";
 import paymentApi from "@/api/paymentApi";
 import Loading from "@/components/Loading";
-import { Error404 } from "./NFT/error/Error404";
+import { Error404 } from "./error/Error404";
 
 export const Settings: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
