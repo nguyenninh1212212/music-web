@@ -1,6 +1,0 @@
-name = "my-app"
-type = "javascript"
-compatibility_date = "2025-11-28"
-
-[site]
-bucket = "./build"   # thư mục build
